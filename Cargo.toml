@@ -8,5 +8,9 @@ edition = "2021"
 [dependencies]
 bevy = "0.6.1"
 bevy_easings = "0.6.0"
+kayak_ui = { git = "https://github.com/StarArawn/kayak_ui", rev = "6e83e926706e4541c4e4535cbb4e8de7bc3e9a47", features = [
+    "bevy_renderer",
+] }
 itertools = "0.10.3"
+iyes_loopless = "0.2.0"
 rand = "0.8.5"

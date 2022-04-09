@@ -5,18 +5,31 @@ use bevy::{
 };
 use bevy_easings::*;
 use itertools::Itertools;
+use iyes_loopless::prelude::*;
+use kayak_ui::{
+    bevy::BevyKayakUIPlugin,
+    core::{bind, Binding, Bound, MutableBound},
+};
 use rand::prelude::SliceRandom;
-use std::collections::VecDeque;
+use std::{collections::VecDeque, time::Duration};
 
 mod colors;
 use colors::MATERIALS;
+mod ui;
+use ui::*;
 
-// GameStates and FixedTimesteps can not be used together yes, instead use iyes crate
-// https://canary.discord.com/channels/691052431525675048/956767127291965500/956770647911059477
+// GameStates and FixedTimesteps can not be used
+// together yes, instead use iyes crate https://canary.discord.com/channels/691052431525675048/956767127291965500/956770647911059477
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 enum RunState {
     Playing,
     GameOver,
+}
+
+#[derive(Default, Clone, PartialEq, Eq)]
+struct Game {
+    score: u32,
+    score_best: u32,
 }
 
 #[derive(PartialEq, Eq, Debug)]
@@ -25,8 +38,6 @@ enum GameOverReason {
     HitSnake,
     Win,
 }
-
-const LABEL: &str = "my_fixed_timestep";
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone, StageLabel)]
 struct FixedUpdateStage;
@@ -62,6 +73,7 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_plugin(EasingsPlugin)
+        .add_plugin(BevyKayakUIPlugin)
         .add_event::<NewFoodEvent>()
         .insert_resource(WindowDescriptor {
             title: "Snake!".to_string(),
@@ -70,44 +82,43 @@ fn main() {
         .insert_resource(ClearColor(Color::rgb(
             0.04, 0.04, 0.1,
         )))
+        // .init_resource::<Game>()
+        .insert_resource(bind(Game::default()))
         .init_resource::<SnakeBody>()
         .init_resource::<LastKeyPress>()
         .add_startup_system(setup)
         .add_startup_system(spawn_board)
-        // .add_startup_system(spawn_snake.after("board"))
         .add_state(RunState::Playing)
+        .add_startup_system(ui)
+        .add_system(snake_segments)
         .add_system_set(
             SystemSet::on_update(RunState::Playing)
-            .with_system(render_snake)
-            .with_system(user_input)
-            .with_system(food_event_listener)
-        //         .with_system(render_tile_points)
-        //         .with_system(board_shift)
-        //         .with_system(render_tiles)
-        //         .with_system(new_tile_handler)
-        //         .with_system(end_game),
+                .with_system(render_snake)
+                .with_system(user_input)
+                .with_system(food_event_listener),
         )
         .add_system_set(
             SystemSet::on_enter(RunState::Playing)
                 // .with_system(game_reset.system())
-                .with_system(spawn_snake)
+                .with_system(spawn_snake),
         )
-        .add_stage_after(
+        .add_stage_before(
             CoreStage::Update,
-            FixedUpdateStage,
-            SystemStage::parallel()
-                // .with_system_set(SystemSet::on_update(RunState::Playing))
-                .with_run_criteria(
-                    FixedTimestep::step(0.1)
-                        // labels are optional. they provide a way to access the current
-                        // FixedTimestep state from within a system
-                        .with_label(LABEL),
-                )
-                .with_system(snake_movement),
+            "snake_tick",
+            FixedTimestepStage::new(Duration::from_millis(
+                100,
+            ))
+            .with_stage(
+                SystemStage::parallel().with_system(
+                    snake_movement.run_in_bevy_state(
+                        RunState::Playing,
+                    ),
+                ),
+            ),
         )
         .run();
 }
-const TILE_SIZE: f32 = 20.0;
+const TILE_SIZE: f32 = 30.0;
 const TILE_SPACER: f32 = 0.0;
 
 #[derive(
@@ -199,6 +210,8 @@ fn spawn_snake(
     mut commands: Commands,
     query_board: Query<&Board>,
     snake: Res<SnakeBody>,
+    asset_server: Res<AssetServer>,
+    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
 ) {
     let board = query_board.single();
     let start_x = board.size / 2;
@@ -207,11 +220,31 @@ fn spawn_snake(
         VecDeque::from([(start_x, start_y)]);
     // let snake = Snake {
     //     head: Position { x: 1, y: 0 },
-    //     body: VecDeque::from([Position { x: 0, y: 0 }]),
-    // };
+    //     body: VecDeque::from([Position { x: 0, y: 0
+    // }]), };
+
+    let texture_handle =
+        asset_server.load("snake-debug.png");
+    let texture_atlas = TextureAtlas::from_grid(
+        texture_handle,
+        Vec2::new(30.0, 30.0),
+        3,
+        3,
+    );
+    let texture_atlas_handle =
+        texture_atlases.add(texture_atlas);
 
     let x = (&snake).segments[0].x.clone();
     let y = (&snake).segments[0].y.clone();
+    // commands
+    //     .spawn_bundle(SpriteSheetBundle {
+    //         texture_atlas: texture_atlas_handle,
+    //         transform:
+    // Transform::from_scale(Vec3::splat(
+    //             1.0,
+    //         )),
+    //         ..Default::default()
+    //     })
     commands
         .spawn_bundle(SpriteBundle {
             sprite: Sprite {
@@ -234,12 +267,13 @@ fn spawn_snake(
         commands
             .spawn_bundle(SpriteBundle {
                 sprite: Sprite {
-                    color: MATERIALS.food,
+                    // color: MATERIALS.food,
                     custom_size: Some(Vec2::new(
                         TILE_SIZE, TILE_SIZE,
                     )),
                     ..Sprite::default()
                 },
+                texture: asset_server.load("apple.png"),
                 transform: Transform::from_xyz(
                     board.cell_position_to_physical(*x),
                     board.cell_position_to_physical(*y),
@@ -261,10 +295,13 @@ fn render_snake(
     let board = query_board.single();
 
     // dbg!(snake.single());
-    // for (entity, transform, pos) in tiles.iter() {
-    //     let x = board.cell_position_to_physical(pos.x);
-    //     let y = board.cell_position_to_physical(pos.y);
-    //     commands.entity(entity).insert(transform.ease_to(
+    // for (entity, transform, pos) in
+    // tiles.iter() {     let x =
+    // board.cell_position_to_physical(pos.x);
+    //     let y =
+    // board.cell_position_to_physical(pos.y);
+    //     commands.entity(entity).
+    // insert(transform.ease_to(
     //         Transform::from_xyz(
     //             x,
     //             y,
@@ -272,7 +309,8 @@ fn render_snake(
     //         ),
     //         EaseFunction::QuadraticInOut,
     //         EasingType::Once {
-    //             duration: std::time::Duration::from_millis(
+    //             duration:
+    // std::time::Duration::from_millis(
     //                 100,
     //             ),
     //         },
@@ -282,16 +320,40 @@ fn render_snake(
 
 fn user_input(
     input: Res<Input<KeyCode>>,
+    snake: Res<SnakeBody>,
     mut last_pressed: ResMut<LastKeyPress>,
 ) {
+    let head = snake.segments[0];
+    let neck = snake.segments.get(1);
+
     if input.pressed(KeyCode::Up) {
-        last_pressed.0 = KeyCode::Up;
+        match (head, neck) {
+            (h, Some(n)) if (h.y + 1) == n.y => {}
+            _ => {
+                last_pressed.0 = KeyCode::Up;
+            }
+        }
     } else if input.pressed(KeyCode::Down) {
-        last_pressed.0 = KeyCode::Down;
+        match (head, neck) {
+            (h, Some(n)) if (h.y - 1) == n.y => {}
+            _ => {
+                last_pressed.0 = KeyCode::Down;
+            }
+        }
     } else if input.pressed(KeyCode::Left) {
-        last_pressed.0 = KeyCode::Left;
+        match (head, neck) {
+            (h, Some(n)) if (h.x - 1) == n.x => {}
+            _ => {
+                last_pressed.0 = KeyCode::Left;
+            }
+        }
     } else if input.pressed(KeyCode::Right) {
-        last_pressed.0 = KeyCode::Right;
+        match (head, neck) {
+            (h, Some(n)) if (h.x + 1) == n.x => {}
+            _ => {
+                last_pressed.0 = KeyCode::Right;
+            }
+        }
     }
 }
 fn snake_movement(
@@ -303,6 +365,9 @@ fn snake_movement(
     query_food: Query<(Entity, &Position), With<Food>>,
     mut food_events: EventWriter<NewFoodEvent>,
     mut run_state: ResMut<State<RunState>>,
+    mut game: Res<Binding<Game>>,
+    asset_server: Res<AssetServer>,
+    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
 ) {
     let board = query_board.single();
 
@@ -353,7 +418,9 @@ fn snake_movement(
         .find(|position| position == &&new_segment)
         .map(|_| GameOverReason::HitSnake);
 
-    let has_won = if snake.segments.len() == board.size as usize * board.size as usize {
+    let has_won = if snake.segments.len()
+        == board.size as usize * board.size as usize
+    {
         Some(GameOverReason::Win)
     } else {
         None
@@ -361,24 +428,28 @@ fn snake_movement(
 
     match hit_wall.or(hit_self).or(has_won) {
         Some(GameOverReason::HitWall)
-        | Some(GameOverReason::HitSnake) | Some(GameOverReason::Win) => {
+        | Some(GameOverReason::HitSnake)
+        | Some(GameOverReason::Win) => {
             // send game over event
             run_state.set(RunState::GameOver).unwrap();
-
         }
         None => {
             snake.segments.push_front(new_segment);
 
+            let texture_handle =
+                asset_server.load("snake-debug.png");
+            let texture_atlas = TextureAtlas::from_grid(
+                texture_handle,
+                Vec2::new(30.0, 30.0),
+                3,
+                3,
+            );
+            let texture_atlas_handle =
+                texture_atlases.add(texture_atlas);
             // add new snake segment to board
             commands
-                .spawn_bundle(SpriteBundle {
-                    sprite: Sprite {
-                        color: MATERIALS.tile,
-                        custom_size: Some(Vec2::new(
-                            TILE_SIZE, TILE_SIZE,
-                        )),
-                        ..Sprite::default()
-                    },
+                .spawn_bundle(SpriteSheetBundle {
+                    texture_atlas: texture_atlas_handle,
                     transform: Transform::from_xyz(
                         board.cell_position_to_physical(
                             new_segment.x,
@@ -390,19 +461,46 @@ fn snake_movement(
                     ),
                     ..Default::default()
                 })
+                // commands
+                //     .spawn_bundle(SpriteBundle {
+                //         sprite: Sprite {
+                //             color: MATERIALS.tile,
+                //             custom_size: Some(Vec2::new(
+                //                 TILE_SIZE, TILE_SIZE,
+                //             )),
+                //             ..Sprite::default()
+                //         },
+                //         transform: Transform::from_xyz(
+                //
+                // board.cell_position_to_physical(
+                //                 new_segment.x,
+                //             ),
+                //
+                // board.cell_position_to_physical(
+                //                 new_segment.y,
+                //             ),
+                //             2.0,
+                //         ),
+                //         ..Default::default()
+                //     })
                 .insert(snake.segments[0]);
 
-            // remove old snake segment, unless snake just ate food
+            // remove old snake segment, unless snake just
+            // ate food
             let is_food = query_food
                 .iter()
                 .find(|(_, pos)| &&new_segment == pos);
             match is_food {
                 Some((entity, pos)) => {
-                    //TODO: add points for food consumption
+                    game.set(Game {
+                        score: game.get().score + 1,
+                        score_best: 0,
+                    });
+
+                    // game.score += 1;
                     commands
                         .entity(entity)
                         .despawn_recursive();
-                    dbg!("send food event");
                     food_events.send(NewFoodEvent);
                 }
                 None => {
@@ -421,7 +519,17 @@ fn snake_movement(
                 }
             }
         }
-    }
+    };
+
+    let local_game = game.get();
+    if local_game.score_best < local_game.score {
+        game.set(Game {
+            score: game.get().score,
+            score_best: game.get().score,
+        });
+
+        // game.score_best = game.score;
+    };
 }
 
 fn food_event_listener(
@@ -429,6 +537,7 @@ fn food_event_listener(
     query_board: Query<&Board>,
     mut events: EventReader<NewFoodEvent>,
     snake: Res<SnakeBody>,
+    asset_server: Res<AssetServer>,
 ) {
     let board = query_board.single();
     let mut rng = rand::thread_rng();
@@ -449,16 +558,17 @@ fn food_event_listener(
     for pos in possible_food_locations
         .choose_multiple(&mut rng, num_food)
     {
-        dbg!(pos);
+        // dbg!(pos);
         commands
             .spawn_bundle(SpriteBundle {
                 sprite: Sprite {
-                    color: MATERIALS.food,
+                    // color: MATERIALS.food,
                     custom_size: Some(Vec2::new(
                         TILE_SIZE, TILE_SIZE,
                     )),
                     ..Sprite::default()
                 },
+                texture: asset_server.load("apple.png"),
                 transform: Transform::from_xyz(
                     board.cell_position_to_physical(pos.x),
                     board.cell_position_to_physical(pos.y),
@@ -468,5 +578,187 @@ fn food_event_listener(
             })
             .insert(*pos)
             .insert(Food);
+    }
+}
+
+// // snake_segments that do a size change
+// fn snake_segments(
+//     snake: Res<SnakeBody>,
+//     mut positions: Query<(&Position, &mut
+// Transform)>,     query_board: Query<&Board>,
+// ) {
+//     let board = query_board.single();
+
+//     let growth_rate = 1.0 /
+// snake.segments.len() as f32;
+
+//     for (i, segment) in
+// snake.segments.iter().rev().enumerate() {
+//         let current_position = positions
+//             .iter_mut()
+//             .find(|pos| pos.0 == segment);
+
+//         if let Some((pos, mut transform)) =
+// current_position         {
+//             let scale =
+//                 0.5 + (growth_rate * 0.5 * (i +
+// 1) as f32);             transform.scale =
+// Vec3::new(scale, scale, 1.0)         }
+//     }
+// }
+
+fn snake_segments(
+    mut commands: Commands,
+    snake: Res<SnakeBody>,
+    mut positions: Query<(
+        &Position,
+        &mut TextureAtlasSprite,
+        &mut Transform,
+    )>,
+    last_pressed: Res<LastKeyPress>,
+    query_board: Query<&Board>,
+    asset_server: Res<AssetServer>,
+) {
+    let board = query_board.single();
+
+    let growth_rate = 1.0 / snake.segments.len() as f32;
+
+    let current_position = positions
+        .iter_mut()
+        .find(|pos| pos.0 == &snake.segments[0]);
+
+    match current_position {
+        Some((pos, mut sprite, mut transform)) => {
+            let rotation = match last_pressed.0 {
+                KeyCode::Up => Quat::from_rotation_z(0.0),
+                KeyCode::Down => Quat::from_rotation_z(
+                    std::f32::consts::PI,
+                ),
+                KeyCode::Left => Quat::from_rotation_z(
+                    std::f32::consts::FRAC_PI_2,
+                ),
+                KeyCode::Right => Quat::from_rotation_z(
+                    -std::f32::consts::FRAC_PI_2,
+                ),
+                _ => panic!("askflj"),
+            };
+            sprite.index = 6;
+            transform.rotation = rotation;
+        }
+        _ => {}
+    }
+
+    if snake.segments.len() > 1 {
+        let current_position =
+            positions.iter_mut().find(|pos| {
+                pos.0
+                    == &snake.segments
+                        [snake.segments.len() - 1]
+            });
+
+        match current_position {
+            Some((pos, mut sprite, mut transform)) => {
+                let rotation = match detect_side(
+                    pos,
+                    &snake.segments
+                        [snake.segments.len() - 2],
+                ) {
+                    Direction::Up => {
+                        Quat::from_rotation_z(0.0)
+                    }
+                    Direction::Down => {
+                        Quat::from_rotation_z(
+                            std::f32::consts::PI,
+                        )
+                    }
+                    Direction::Left => {
+                        Quat::from_rotation_z(
+                            std::f32::consts::FRAC_PI_2,
+                        )
+                    }
+                    Direction::Right => {
+                        Quat::from_rotation_z(
+                            -std::f32::consts::FRAC_PI_2,
+                        )
+                    }
+                };
+                sprite.index = 7;
+                transform.rotation = rotation;
+            }
+            None => {}
+        }
+    }
+
+    for (front, origin, back) in
+        snake.segments.iter().tuple_windows()
+    {
+        let a = detect_side(origin, front);
+        let b = detect_side(origin, back);
+        // dbg!(origin, a, b);
+        let image = match (a, b) {
+            (Direction::Down, Direction::Up) => 0,
+            (Direction::Up, Direction::Down) => 0,
+            (Direction::Up, Direction::Right) => 1,
+            (Direction::Right, Direction::Up) => 1,
+            (Direction::Right, Direction::Down) => 2,
+            (Direction::Down, Direction::Right) => 2,
+            (Direction::Right, Direction::Left) => 3,
+            (Direction::Left, Direction::Right) => 3,
+            (Direction::Left, Direction::Up) => 4,
+            (Direction::Up, Direction::Left) => 4,
+            (Direction::Left, Direction::Down) => 5,
+            (Direction::Down, Direction::Left) => 5,
+            _ => panic!("unhandled"),
+        };
+        let current_position = positions
+            .iter_mut()
+            .find(|pos| pos.0 == origin);
+
+        match current_position {
+            Some((_, mut sprite, mut transform)) => {
+                sprite.index = image;
+                transform.rotation =
+                    Quat::from_rotation_z(0.0);
+            }
+            None => {}
+        }
+    }
+}
+// for (i, segment) in
+// snake.segments.iter().rev().enumerate() {
+//     let current_position = positions
+//         .iter_mut()
+//         .find(|pos| pos.0 == segment);
+
+//     if let Some((pos, mut transform)) =
+// current_position     {
+//         let scale =
+//             0.5 + (growth_rate * 0.5 * (i + 1)
+// as f32);         transform.scale =
+// Vec3::new(scale, scale, 1.0)     }
+// }
+
+#[derive(Debug)]
+enum Direction {
+    Up,
+    Down,
+    Left,
+    Right,
+}
+fn detect_side(
+    origin: &Position,
+    other: &Position,
+) -> Direction {
+    // dbg!(origin, other);
+    if other.y > origin.y {
+        Direction::Up
+    } else if other.y < origin.y {
+        Direction::Down
+    } else if other.x > origin.x {
+        Direction::Right
+    } else if other.x < origin.x {
+        Direction::Left
+    } else {
+        panic!("should never happen");
     }
 }
