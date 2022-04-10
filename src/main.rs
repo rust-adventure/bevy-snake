@@ -1,8 +1,4 @@
 use bevy::prelude::*;
-use bevy::{
-    core::{FixedTimestep, FixedTimesteps},
-    prelude::*,
-};
 use bevy_easings::*;
 use itertools::Itertools;
 use iyes_loopless::prelude::*;
@@ -10,9 +6,12 @@ use kayak_ui::{
     bevy::BevyKayakUIPlugin,
     core::{bind, Binding, Bound, MutableBound},
 };
-use rand::prelude::SliceRandom;
-use std::{collections::VecDeque, time::Duration};
+use rand::{
+    distributions::WeightedIndex,
+    prelude::{Distribution, SliceRandom},
+};
 
+use std::{collections::VecDeque, time::Duration};
 
 mod colors;
 use colors::MATERIALS;
@@ -25,6 +24,7 @@ use ui::*;
 enum RunState {
     Playing,
     GameOver,
+    Menu,
 }
 
 #[derive(Default, Clone, PartialEq, Eq)]
@@ -70,9 +70,7 @@ struct NewFoodEvent;
 
 #[derive(Component)]
 struct Food;
-fn main()  {
-
-
+fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_plugin(EasingsPlugin)
@@ -83,7 +81,7 @@ fn main()  {
             ..Default::default()
         })
         .insert_resource(ClearColor(Color::rgb(
-            0.04, 0.04, 0.1,
+            0.52, 0.73, 0.17,
         )))
         // .init_resource::<Game>()
         .insert_resource(bind(Game::default()))
@@ -161,8 +159,27 @@ fn setup(mut commands: Commands) {
     commands
         .spawn_bundle(OrthographicCameraBundle::new_2d());
 }
-fn spawn_board(mut commands: Commands) {
+fn spawn_board(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+) {
     let board = Board::new(20);
+
+    let texture_handle = asset_server.load("grass.png");
+    let texture_atlas = TextureAtlas::from_grid(
+        texture_handle,
+        Vec2::new(16.0, 16.0),
+        3,
+        1,
+    );
+    let texture_atlas_handle =
+        texture_atlases.add(texture_atlas);
+
+    let mut rng = rand::thread_rng();
+    // let die = Uniform::from(0..3);
+    let weights = vec![3, 3, 1];
+    let dist = WeightedIndex::new(weights).unwrap();
 
     commands
         .spawn_bundle(SpriteBundle {
@@ -180,18 +197,15 @@ fn spawn_board(mut commands: Commands) {
             for tile in (0..board.size)
                 .cartesian_product(0..board.size)
             {
-                builder.spawn_bundle(SpriteBundle {
-                    sprite: Sprite {
-                        color: if (tile.0 + tile.1) % 2 == 0
-                        {
-                            MATERIALS.tile_placeholder
-                        } else {
-                            MATERIALS.tile_placeholder_dark
-                        },
+                builder.spawn_bundle(SpriteSheetBundle {
+                    texture_atlas: texture_atlas_handle
+                        .clone(),
+                    sprite: TextureAtlasSprite {
+                        index: dist.sample(&mut rng),
                         custom_size: Some(Vec2::new(
                             TILE_SIZE, TILE_SIZE,
                         )),
-                        ..Sprite::default()
+                        ..TextureAtlasSprite::default()
                     },
                     transform: Transform::from_xyz(
                         board.cell_position_to_physical(
@@ -227,40 +241,21 @@ fn spawn_snake(
     // }]), };
 
     let texture_handle =
-        asset_server.load("snake-debug.png");
+        asset_server.load("snake-sprites.png");
     let texture_atlas = TextureAtlas::from_grid(
         texture_handle,
-        Vec2::new(30.0, 30.0),
-        3,
-        3,
+        Vec2::new(136.0, 136.0),
+        4,
+        30,
     );
     let texture_atlas_handle =
         texture_atlases.add(texture_atlas);
 
-    // commands
-    //     .spawn_bundle(SpriteSheetBundle {
-    //         texture_atlas: texture_atlas_handle,
-    //         transform:
-    // Transform::from_scale(Vec3::splat(
-    //             1.0,
-    //         )),
-    //         ..Default::default()
-    //     })
     for position in snake.segments.iter() {
-        let texture_handle =
-            asset_server.load("snake-debug.png");
-        let texture_atlas = TextureAtlas::from_grid(
-            texture_handle,
-            Vec2::new(30.0, 30.0),
-            3,
-            3,
-        );
-        let texture_atlas_handle =
-            texture_atlases.add(texture_atlas);
         // add new snake segment to board
         commands
             .spawn_bundle(SpriteSheetBundle {
-                texture_atlas: texture_atlas_handle,
+                texture_atlas: texture_atlas_handle.clone(),
                 transform: Transform::from_xyz(
                     board.cell_position_to_physical(
                         position.x,
@@ -270,6 +265,13 @@ fn spawn_snake(
                     ),
                     2.0,
                 ),
+                sprite: TextureAtlasSprite {
+                    index: 116,
+                    custom_size: Some(Vec2::new(
+                        TILE_SIZE, TILE_SIZE,
+                    )),
+                    ..Default::default()
+                },
                 ..Default::default()
             })
             .insert(*position);
@@ -449,12 +451,12 @@ fn snake_movement(
             snake.segments.push_front(new_segment);
 
             let texture_handle =
-                asset_server.load("snake-debug.png");
+                asset_server.load("snake-sprites.png");
             let texture_atlas = TextureAtlas::from_grid(
                 texture_handle,
-                Vec2::new(30.0, 30.0),
-                3,
-                3,
+                Vec2::new(136.0, 136.0),
+                4,
+                30,
             );
             let texture_atlas_handle =
                 texture_atlases.add(texture_atlas);
@@ -471,6 +473,13 @@ fn snake_movement(
                         ),
                         2.0,
                     ),
+                    sprite: TextureAtlasSprite {
+                        index: 116,
+                        custom_size: Some(Vec2::new(
+                            TILE_SIZE, TILE_SIZE,
+                        )),
+                        ..Default::default()
+                    },
                     ..Default::default()
                 })
                 // commands
@@ -619,7 +628,13 @@ fn food_event_listener(
 //     }
 // }
 
-#[tracing::instrument(skip(commands,positions, last_pressed, query_board, asset_server))]
+#[tracing::instrument(skip(
+    commands,
+    positions,
+    last_pressed,
+    query_board,
+    asset_server
+))]
 fn snake_segments(
     mut commands: Commands,
     snake: Res<SnakeBody>,
@@ -633,11 +648,9 @@ fn snake_segments(
     asset_server: Res<AssetServer>,
 ) {
     if snake.segments.len() > 1 {
-        let current_position =
-            positions.iter_mut().find(|pos| {
-                pos.0
-                    == &snake.segments[0]
-            });
+        let current_position = positions
+            .iter_mut()
+            .find(|pos| pos.0 == &snake.segments[0]);
 
         match current_position {
             Some((pos, mut sprite, mut transform)) => {
@@ -646,25 +659,25 @@ fn snake_segments(
                     &snake.segments[1],
                 ) {
                     Direction::Up => {
+                        Quat::from_rotation_z(0.0)
+                    }
+                    Direction::Down => {
                         Quat::from_rotation_z(
                             std::f32::consts::PI,
                         )
                     }
-                    Direction::Down => {
-                        Quat::from_rotation_z(0.0)
-                    }
                     Direction::Left => {
-                        Quat::from_rotation_z(
-                          -  std::f32::consts::FRAC_PI_2,
-                        )
-                    }
-                    Direction::Right => {
                         Quat::from_rotation_z(
                             std::f32::consts::FRAC_PI_2,
                         )
                     }
+                    Direction::Right => {
+                        Quat::from_rotation_z(
+                            -std::f32::consts::FRAC_PI_2,
+                        )
+                    }
                 };
-                sprite.index = 6;
+                sprite.index = 116;
                 transform.rotation = rotation;
             }
             None => {}
@@ -705,7 +718,7 @@ fn snake_segments(
                         )
                     }
                 };
-                sprite.index = 7;
+                sprite.index = 119;
                 transform.rotation = rotation;
             }
             None => {}
@@ -717,20 +730,70 @@ fn snake_segments(
     {
         let a = detect_side(origin, front);
         let b = detect_side(origin, back);
-        // dbg!(origin, a, b);
+
         let image = match (a, b) {
-            (Direction::Down, Direction::Up) => 0,
-            (Direction::Up, Direction::Down) => 0,
-            (Direction::Up, Direction::Right) => 1,
-            (Direction::Right, Direction::Up) => 1,
-            (Direction::Right, Direction::Down) => 2,
-            (Direction::Down, Direction::Right) => 2,
-            (Direction::Right, Direction::Left) => 3,
-            (Direction::Left, Direction::Right) => 3,
-            (Direction::Left, Direction::Up) => 4,
-            (Direction::Up, Direction::Left) => 4,
-            (Direction::Left, Direction::Down) => 5,
-            (Direction::Down, Direction::Left) => 5,
+            // vertical
+            (Direction::Down, Direction::Up) => {
+                (117, Quat::from_rotation_z(0.0))
+            }
+            (Direction::Up, Direction::Down) => {
+                (117, Quat::from_rotation_z(0.0))
+            }
+            // horizontal
+            (Direction::Right, Direction::Left) => (
+                117,
+                Quat::from_rotation_z(
+                    std::f32::consts::FRAC_PI_2,
+                ),
+            ),
+            (Direction::Left, Direction::Right) => (
+                117,
+                Quat::from_rotation_z(
+                    std::f32::consts::FRAC_PI_2,
+                ),
+            ),
+            // ⌞
+            (Direction::Up, Direction::Right) => (
+                118,
+                Quat::from_rotation_z(
+                    std::f32::consts::FRAC_PI_2,
+                ),
+            ),
+            (Direction::Right, Direction::Up) => (
+                118,
+                Quat::from_rotation_z(
+                    std::f32::consts::FRAC_PI_2,
+                ),
+            ),
+            // ⌜
+            (Direction::Right, Direction::Down) => {
+                (118, Quat::from_rotation_z(0.0))
+            }
+            (Direction::Down, Direction::Right) => {
+                (118, Quat::from_rotation_z(0.0))
+            }
+            // ⌟
+            (Direction::Left, Direction::Up) => (
+                118,
+                Quat::from_rotation_z(std::f32::consts::PI),
+            ),
+            (Direction::Up, Direction::Left) => (
+                118,
+                Quat::from_rotation_z(std::f32::consts::PI),
+            ),
+            // ⌝
+            (Direction::Left, Direction::Down) => (
+                118,
+                Quat::from_rotation_z(
+                    -std::f32::consts::FRAC_PI_2,
+                ),
+            ),
+            (Direction::Down, Direction::Left) => (
+                118,
+                Quat::from_rotation_z(
+                    -std::f32::consts::FRAC_PI_2,
+                ),
+            ),
             _ => panic!("unhandled"),
         };
         let current_position = positions
@@ -739,9 +802,8 @@ fn snake_segments(
 
         match current_position {
             Some((_, mut sprite, mut transform)) => {
-                sprite.index = image;
-                transform.rotation =
-                    Quat::from_rotation_z(0.0);
+                sprite.index = image.0;
+                transform.rotation = image.1;
             }
             None => {}
         }
