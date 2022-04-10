@@ -14,3 +14,4 @@ kayak_ui = { git = "https://github.com/StarArawn/kayak_ui", rev = "6e83e926706e4
 itertools = "0.10.3"
 iyes_loopless = "0.2.0"
 rand = "0.8.5"
+tracing = "0.1.33"
