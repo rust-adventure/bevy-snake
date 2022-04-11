@@ -18,6 +18,7 @@ pub const MATERIALS: Materials = Materials {
 };
 
 pub struct ButtonMaterials {
+    pub none: Color,
     pub normal: Color,
     pub hovered: Color,
     pub pressed: Color,
@@ -25,6 +26,7 @@ pub struct ButtonMaterials {
 
 pub const BUTTON_MATERIALS: ButtonMaterials =
     ButtonMaterials {
+        none: Color::NONE,
         normal: Color::rgb(0.75, 0.75, 0.9),
         hovered: Color::rgb(0.7, 0.7, 0.9),
         pressed: Color::rgb(0.6, 0.6, 1.0),
