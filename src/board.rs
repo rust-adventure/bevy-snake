@@ -8,7 +8,7 @@ use rand::{
     distributions::WeightedIndex, prelude::Distribution,
 };
 
-use crate::{colors::MATERIALS, Food};
+use crate::{colors::MATERIALS, food::Food};
 
 const TILE_SIZE: f32 = 30.0;
 const TILE_SPACER: f32 = 0.0;
@@ -28,7 +28,7 @@ pub struct Board {
 }
 
 impl Board {
-    pub fn new(size: u8) -> Self {
+    fn new(size: u8) -> Self {
         let physical_size = f32::from(size) * TILE_SIZE
             + f32::from(size + 1) * TILE_SPACER;
         Board {
@@ -44,7 +44,6 @@ impl Board {
             + f32::from(pos) * TILE_SIZE
             + f32::from(pos + 1) * TILE_SPACER
     }
-    // fn tile_position(&self, x:u8, y:u8) -> {}
 }
 
 pub fn spawn_board(

@@ -1,5 +1,7 @@
-use crate::colors::{BUTTON_MATERIALS, MATERIALS};
-use crate::common::{FontSpec, Game, RunState};
+use crate::{
+    colors::{BUTTON_MATERIALS, MATERIALS},
+    common::{FontSpec, Game, RunState},
+};
 use bevy::prelude::*;
 
 #[derive(Component)]
