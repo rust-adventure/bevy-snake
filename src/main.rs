@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_kira_audio::AudioPlugin;
 use bevy_snake::{
     board::spawn_board,
-    common::{FontSpec, Game, RunState},
+    common::{Game, RunState},
     control::{user_input, LastKeyPress},
     food::{food_event_listener, NewFoodEvent},
     snake::{
@@ -16,21 +16,20 @@ use std::time::Duration;
 
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins)
-        .add_plugin(GameUiPlugin)
-        .add_plugin(AudioPlugin)
-        .add_event::<NewFoodEvent>()
         .insert_resource(WindowDescriptor {
             title: "Snake!".to_string(),
             ..Default::default()
         })
+        .add_plugins(DefaultPlugins)
+        .add_plugin(GameUiPlugin)
+        .add_plugin(AudioPlugin)
+        .add_event::<NewFoodEvent>()
         .insert_resource(ClearColor(Color::rgb(
             0.52, 0.73, 0.17,
         )))
         .init_resource::<Game>()
         .init_resource::<SnakeBody>()
         .init_resource::<LastKeyPress>()
-        .init_resource::<FontSpec>()
         .add_startup_system(setup)
         .add_startup_system(spawn_board)
         .add_state(RunState::Playing)

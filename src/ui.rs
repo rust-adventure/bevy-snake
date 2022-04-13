@@ -1,6 +1,6 @@
 use crate::{
     colors::{BUTTON_MATERIALS, MATERIALS},
-    common::{FontSpec, Game, RunState},
+    common::{Game, RunState},
 };
 use bevy::prelude::*;
 
@@ -14,10 +14,27 @@ pub struct GameUiPlugin;
 
 impl Plugin for GameUiPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(setup_ui)
+        app.init_resource::<FontSpec>()
+            .add_startup_system(setup_ui)
             .add_system(scoreboard)
             .add_system(button_interaction_system)
             .add_system(button_text_system);
+    }
+}
+
+pub struct FontSpec {
+    pub family: Handle<Font>,
+}
+
+impl FromWorld for FontSpec {
+    fn from_world(world: &mut World) -> Self {
+        let asset_server = world
+            .get_resource_mut::<AssetServer>()
+            .unwrap();
+        FontSpec {
+            family: asset_server
+                .load("fonts/FiraSans-Bold.ttf"),
+        }
     }
 }
 
