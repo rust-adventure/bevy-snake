@@ -146,62 +146,40 @@ pub fn render_snake_segments(
 
         let image = match (a, b) {
             // vertical
-            (Direction::Down, Direction::Up) => {
-                (117, Quat::from_rotation_z(0.0))
-            }
-            (Direction::Up, Direction::Down) => {
+            (Direction::Down, Direction::Up)
+            | (Direction::Up, Direction::Down) => {
                 (117, Quat::from_rotation_z(0.0))
             }
             // horizontal
-            (Direction::Right, Direction::Left) => (
-                117,
-                Quat::from_rotation_z(
-                    std::f32::consts::FRAC_PI_2,
-                ),
-            ),
-            (Direction::Left, Direction::Right) => (
+            (Direction::Right, Direction::Left)
+            | (Direction::Left, Direction::Right) => (
                 117,
                 Quat::from_rotation_z(
                     std::f32::consts::FRAC_PI_2,
                 ),
             ),
             // ⌞
-            (Direction::Up, Direction::Right) => (
-                118,
-                Quat::from_rotation_z(
-                    std::f32::consts::FRAC_PI_2,
-                ),
-            ),
-            (Direction::Right, Direction::Up) => (
+            (Direction::Up, Direction::Right)
+            | (Direction::Right, Direction::Up) => (
                 118,
                 Quat::from_rotation_z(
                     std::f32::consts::FRAC_PI_2,
                 ),
             ),
             // ⌜
-            (Direction::Right, Direction::Down) => {
-                (118, Quat::from_rotation_z(0.0))
-            }
-            (Direction::Down, Direction::Right) => {
+            (Direction::Right, Direction::Down)
+            | (Direction::Down, Direction::Right) => {
                 (118, Quat::from_rotation_z(0.0))
             }
             // ⌟
-            (Direction::Left, Direction::Up) => (
-                118,
-                Quat::from_rotation_z(std::f32::consts::PI),
-            ),
-            (Direction::Up, Direction::Left) => (
+            (Direction::Left, Direction::Up)
+            | (Direction::Up, Direction::Left) => (
                 118,
                 Quat::from_rotation_z(std::f32::consts::PI),
             ),
             // ⌝
-            (Direction::Left, Direction::Down) => (
-                118,
-                Quat::from_rotation_z(
-                    -std::f32::consts::FRAC_PI_2,
-                ),
-            ),
-            (Direction::Down, Direction::Left) => (
+            (Direction::Left, Direction::Down)
+            | (Direction::Down, Direction::Left) => (
                 118,
                 Quat::from_rotation_z(
                     -std::f32::consts::FRAC_PI_2,

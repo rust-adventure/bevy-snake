@@ -9,7 +9,11 @@ edition = "2021"
 bevy = "0.6.1"
 bevy_easings = "0.6.0"
 bevy_kira_audio = "0.8.0"
+# bevy_ninepatch = "0.6.0"
 itertools = "0.10.3"
 iyes_loopless = "0.2.0"
 rand = "0.8.5"
 tracing = "0.1.33"
+kayak_ui = { git = "https://github.com/StarArawn/kayak_ui", rev = "6e83e926706e4541c4e4535cbb4e8de7bc3e9a47", features = [
+    "bevy_renderer",
+] }

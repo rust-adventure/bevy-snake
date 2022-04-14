@@ -11,6 +11,8 @@ pub mod colors;
 pub mod common;
 pub mod control;
 pub mod food;
+pub mod scoring;
+pub mod settings;
 pub mod snake;
 pub mod ui;
 
@@ -85,7 +87,7 @@ pub fn snake_movement(
         | Some(GameOverReason::Win) => {
             // send game over event
             audio.play(asset_server.load("gameover.ogg"));
-            run_state.set(RunState::GameOver).unwrap();
+            run_state.set(RunState::Menu).unwrap();
         }
         None => {
             snake.segments.push_front(new_segment);

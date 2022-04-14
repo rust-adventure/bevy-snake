@@ -1,10 +1,13 @@
 use bevy::prelude::*;
 use bevy_kira_audio::AudioPlugin;
+// use bevy_ninepatch::NinePatchPlugin;
 use bevy_snake::{
     board::spawn_board,
     common::{Game, RunState},
     control::{user_input, LastKeyPress},
     food::{food_event_listener, NewFoodEvent},
+    scoring::SpeedrunPlugin,
+    settings::GameSettings,
     snake::{
         render_snake_segments, spawn_snake, SnakeBody,
     },
@@ -12,6 +15,7 @@ use bevy_snake::{
     ui::GameUiPlugin,
 };
 use iyes_loopless::prelude::*;
+use kayak_ui::{bevy::BevyKayakUIPlugin, core::bind};
 use std::time::Duration;
 
 fn main() {
@@ -21,6 +25,8 @@ fn main() {
             ..Default::default()
         })
         .add_plugins(DefaultPlugins)
+        .add_plugin(BevyKayakUIPlugin)
+        .add_plugin(SpeedrunPlugin)
         .add_plugin(GameUiPlugin)
         .add_plugin(AudioPlugin)
         .add_event::<NewFoodEvent>()
@@ -29,10 +35,11 @@ fn main() {
         )))
         .init_resource::<Game>()
         .init_resource::<SnakeBody>()
+        .init_resource::<GameSettings>()
         .init_resource::<LastKeyPress>()
         .add_startup_system(setup)
         .add_startup_system(spawn_board)
-        .add_state(RunState::Playing)
+        .add_state(RunState::Menu)
         .add_system_set(
             SystemSet::on_update(RunState::Playing)
                 .with_system(user_input)

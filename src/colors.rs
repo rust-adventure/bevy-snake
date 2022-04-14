@@ -7,6 +7,7 @@ pub struct Materials {
     pub tile: Color,
     pub food: Color,
     pub none: Color,
+    pub screen: Color,
 }
 pub const MATERIALS: Materials = Materials {
     board: Color::rgb(0.7, 0.7, 0.8),
@@ -15,6 +16,7 @@ pub const MATERIALS: Materials = Materials {
     tile: Color::rgb(0.9, 0.9, 1.0),
     food: Color::rgb(0.9, 0.1, 0.1),
     none: Color::NONE,
+    screen: Color::rgba(0.0, 0.0, 0.0, 0.2),
 };
 
 pub struct ButtonMaterials {
