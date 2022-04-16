@@ -1,26 +1,20 @@
 use bevy::{app::AppExit, prelude::*};
 use kayak_ui::{
     bevy::{
-        BevyContext, BevyKayakUIPlugin, FontMapping,
-        ImageManager, UICameraBundle,
+        BevyContext, FontMapping, ImageManager,
+        UICameraBundle,
     },
-    core::{bind, context, KayakContextRef},
-};
-use kayak_ui::{
-    core::Binding,
-    widgets::{App, NinePatch, Text},
-};
-use kayak_ui::{
     core::{
-        constructor, render, rsx,
+        bind, constructor, render, rsx,
         styles::{
-            Edge, LayoutType, Style, StyleProp, Units,
+            Edge, LayoutType, PositionType, Style,
+            StyleProp, Units,
         },
-        use_state, widget, Bound, EventType, Handler,
+        use_state, widget, Binding, Bound, EventType,
         Index, MutableBound, OnEvent, VecTracker,
         WidgetProps,
     },
-    widgets::If,
+    widgets::{App, If, Image, NinePatch, Text},
 };
 
 use crate::{common::RunState, settings::GameSettings};
@@ -60,9 +54,9 @@ pub fn new_game_ui_kayak(
         .insert_resource(bind(runstate.current().clone()));
     commands.insert_resource(bind(settings.clone()));
 
-    let roboto_font =
-        asset_server.load("roboto.kayak_font");
-    font_mapping.add("Roboto", roboto_font.clone());
+    font_mapping.set_default(
+        asset_server.load("roboto.kayak_font"),
+    );
 
     let context = BevyContext::new(|context| {
         render! {
@@ -108,37 +102,23 @@ fn GameMenu() {
         settings.get()
     };
 
-    let (container, roboto) = {
+    let container = {
         let world = context.get_global_mut::<World>();
         if world.is_err() {
             return;
         }
 
         let mut world = world.unwrap();
-        let (roboto_font, handle) = {
-            let asset_server = world
-                .get_resource::<AssetServer>()
-                .unwrap();
-            let roboto_font =
-                asset_server.load("roboto.kayak_font");
-            let handle: Handle<
-                bevy::render::texture::Image,
-            > = asset_server.load("green_panel.png");
-            (roboto_font, handle)
-        };
 
-        let container = {
-            let mut image_manager = world
-                .get_resource_mut::<ImageManager>()
-                .unwrap();
-            image_manager.get(&handle)
-        };
+        let asset_server =
+            world.get_resource::<AssetServer>().unwrap();
+        let handle: Handle<bevy::render::texture::Image> =
+            asset_server.load("green_panel.png");
 
-        let font_mapping =
-            world.get_resource::<FontMapping>().unwrap();
-        let roboto = font_mapping.get(&roboto_font);
-
-        (container, roboto)
+        let mut image_manager = world
+            .get_resource_mut::<ImageManager>()
+            .unwrap();
+        image_manager.get(&handle)
     };
 
     let nine_patch_styles = Style {
@@ -202,16 +182,16 @@ fn GameMenu() {
            <If condition={show_main}>
                 <NewGameButton/>
                 <BlueButton on_click={Some(on_click)}>
-                    <Text line_height={Some(50.0)} size={20.0} content={"Settings".to_string()} font={roboto} />
+                    <Text line_height={Some(50.0)} size={20.0} content={"Settings".to_string()}/>
                 </BlueButton>
                 <QuitButton/>
            </If>
 
            <If condition={show_settings}>
                 <BlueButton on_click={Some(on_click_back)}>
-                    <Text line_height={Some(50.0)} size={20.0} content={"Back".to_string()} font={roboto} />
+                    <Text line_height={Some(50.0)} size={20.0} content={"Back".to_string()}/>
                 </BlueButton>
-                <Text line_height={Some(50.0)} size={20.0} content={"Speedrun Mode!".to_string()} font={roboto} />
+                <Text line_height={Some(50.0)} size={20.0} content={"Speedrun Mode!".to_string()}/>
                 <Checkbox checked={settings.speedrun_mode} on_click={Some(on_click_checkbox)}/>
            </If>
        </NinePatch>
@@ -222,21 +202,14 @@ fn GameMenu() {
 
 #[widget]
 fn NewGameButton() {
-    // let roboto_font =
-    //     asset_server.load("roboto.kayak_font");
-    // let roboto = font_mapping.get(&roboto_font);
-
-    let on_click = OnEvent::new(move |context, event| {
-        match event.event_type {
-            EventType::Click(..) => {
-                context
+    let on_click = OnEvent::new(|context, event| {
+        if let EventType::Click(..) = event.event_type {
+            context
             .query_world::<ResMut<State<RunState>>, _, _>(
                 |mut state| {
                     state.set(RunState::Playing).unwrap();
                 },
             );
-            }
-            _ => {}
         }
     });
     rsx! {
@@ -249,15 +222,13 @@ fn NewGameButton() {
 #[widget]
 fn QuitButton() {
     let on_click = OnEvent::new(move |context, event| {
-        match event.event_type {
-            EventType::Click(..) => {
-                context.query_world::<EventWriter<AppExit>, _, _>(
-            |mut exit| {
-                exit.send(AppExit);
-            },
-        );
-            }
-            _ => {}
+        if let EventType::Click(..) = event.event_type {
+            context
+                .query_world::<EventWriter<AppExit>, _, _>(
+                    |mut exit| {
+                        exit.send(AppExit);
+                    },
+                );
         }
     });
     rsx! {
@@ -365,7 +336,7 @@ fn BlueButton(props: BlueButtonProps) {
 
 #[widget]
 fn Speedrun() {
-    let (roboto, container) = {
+    let container = {
         let world = context.get_global_mut::<World>();
         if world.is_err() {
             return;
@@ -377,18 +348,12 @@ fn Speedrun() {
         let handle: Handle<bevy::render::texture::Image> =
             asset_server.load("green_panel.png");
 
-        let font_mapping =
-            world.get_resource::<FontMapping>().unwrap();
-        let roboto_font =
-            asset_server.load("roboto.kayak_font");
-        let roboto = font_mapping.get(&roboto_font);
-
         let mut image_manager = world
             .get_resource_mut::<ImageManager>()
             .unwrap();
         let container = image_manager.get(&handle);
 
-        (roboto, container)
+        container
     };
 
     let nine_patch_styles = Style {
@@ -415,8 +380,8 @@ fn Speedrun() {
                 handle={container}
             >
 
-                <Text line_height={Some(50.0)} size={20.0} content={"Score".to_string()} font={roboto} />
-                <Text line_height={Some(50.0)} size={20.0} content={"Time".to_string()} font={roboto} />
+                <Text line_height={Some(50.0)} size={20.0} content={"Score".to_string()} />
+                <Text line_height={Some(50.0)} size={20.0} content={"Time".to_string()} />
         </NinePatch>
 
     }
@@ -457,19 +422,12 @@ fn Checkbox(props: CheckboxProps) {
 
         let mut world = world.unwrap();
 
-        let (handle1, handle2) = {
-            let asset_server = world
-                .get_resource::<AssetServer>()
-                .unwrap();
-            let handle1: Handle<
-                bevy::render::texture::Image,
-            > = asset_server.load("grey_box.png");
-            let handle2: Handle<
-                bevy::render::texture::Image,
-            > = asset_server.load("green_boxCheckmark.png");
-
-            (handle1, handle2)
-        };
+        let asset_server =
+            world.get_resource::<AssetServer>().unwrap();
+        let handle1: Handle<bevy::render::texture::Image> =
+            asset_server.load("grey_box.png");
+        let handle2: Handle<bevy::render::texture::Image> =
+            asset_server.load("green_boxCheckmark.png");
 
         let mut image_manager = world
             .get_resource_mut::<ImageManager>()
@@ -480,20 +438,18 @@ fn Checkbox(props: CheckboxProps) {
         (empty_box, checked_box)
     };
 
-    let current_button_handle =
-        context.create_state::<u16>(empty_box).unwrap();
-
     let button_styles = Style {
-        width: StyleProp::Value(Units::Pixels(50.0)),
-        height: StyleProp::Value(Units::Pixels(50.0)),
-        padding: StyleProp::Value(Edge::all(
-            Units::Stretch(1.0),
-        )),
-        ..props.styles.clone().unwrap_or_default()
+        position_type: StyleProp::Value(
+            PositionType::SelfDirected,
+        ),
+        width: StyleProp::Value(Units::Pixels(25.0)),
+        height: StyleProp::Value(Units::Pixels(25.0)),
+
+        left: StyleProp::Value(Units::Pixels(25.0)),
+        top: StyleProp::Value(Units::Pixels(25.0)),
+        ..Default::default()
     };
 
-    let cloned_current_button_handle =
-        current_button_handle.clone();
     let on_click = props.on_click.clone();
     let on_event = OnEvent::new(move |ctx, event| {
         match event.event_type {
@@ -508,18 +464,12 @@ fn Checkbox(props: CheckboxProps) {
             _ => (),
         }
     });
-    if props.checked {
-        cloned_current_button_handle.set(checked_box);
+    let image = if props.checked {
+        checked_box
     } else {
-        cloned_current_button_handle.set(empty_box);
-    }
-
+        empty_box
+    };
     rsx! {
-        <NinePatch
-            border={Edge::all(15.0)}
-            handle={current_button_handle.get()}
-            styles={Some(button_styles)}
-            on_event={Some(on_event)}
-        />
+        <Image on_event={Some(on_event)} styles={Some(button_styles)} handle={image} />
     }
 }
