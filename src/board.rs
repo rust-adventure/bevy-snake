@@ -120,7 +120,7 @@ impl Command for SpawnSnakeSegment {
                 .get_resource::<AssetServer>()
                 .unwrap();
             let texture_handle =
-                asset_server.load("snake-sprites.png");
+                asset_server.load("snake_sprites.png");
 
             let mut texture_atlases = world
                 .get_resource_mut::<Assets<TextureAtlas>>()

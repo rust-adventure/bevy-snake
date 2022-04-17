@@ -29,7 +29,8 @@ impl Plugin for GameUiPlugin {
             .add_system(button_interaction_system)
             .add_system(button_text_system)
             .add_system(bind_gamestate)
-            .add_system(bind_gamesettings);
+            .add_system(bind_gamesettings)
+            .add_system(bind_speedruns);
     }
 }
 
@@ -197,18 +198,26 @@ fn setup_ui(
 
 fn scoreboard(
     game: Res<Game>,
-    mut query_scores: QuerySet<(
-        QueryState<&mut Text, With<ScoreDisplay>>,
-        QueryState<&mut Text, With<BestScoreDisplay>>,
-    )>,
+    mut query_score: Query<
+        &mut Text,
+        (
+            With<ScoreDisplay>,
+            Without<BestScoreDisplay>,
+        ),
+    >,
+    mut query_high_score: Query<
+        &mut Text,
+        (
+            With<BestScoreDisplay>,
+            Without<ScoreDisplay>,
+        ),
+    >,
 ) {
-    let mut q0 = query_scores.q0();
-    for mut text in q0.iter_mut() {
+    for mut text in query_score.iter_mut() {
         text.sections[0].value = game.score.to_string();
     }
 
-    let mut q1 = query_scores.q1();
-    for mut text in q1.iter_mut() {
+    for mut text in query_high_score.iter_mut() {
         text.sections[0].value =
             game.score_best.to_string();
     }

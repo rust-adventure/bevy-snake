@@ -2,20 +2,21 @@ use bevy::prelude::*;
 use bevy_kira_audio::AudioPlugin;
 // use bevy_ninepatch::NinePatchPlugin;
 use bevy_snake::{
-    board::spawn_board,
+    board::{spawn_board, Position},
     common::{Game, RunState},
     control::{user_input, LastKeyPress},
-    food::{food_event_listener, NewFoodEvent},
+    food::{food_event_listener, Food, NewFoodEvent},
     scoring::SpeedrunPlugin,
     settings::GameSettings,
     snake::{
-        render_snake_segments, spawn_snake, SnakeBody,
+        new_game_spawns, render_snake_segments, SnakeBody,
+        SnakeTextureSelection,
     },
     snake_movement,
     ui::GameUiPlugin,
 };
 use iyes_loopless::prelude::*;
-use kayak_ui::{bevy::BevyKayakUIPlugin, core::bind};
+use kayak_ui::bevy::BevyKayakUIPlugin;
 use std::time::Duration;
 
 fn main() {
@@ -35,6 +36,7 @@ fn main() {
         )))
         .init_resource::<Game>()
         .init_resource::<SnakeBody>()
+        .init_resource::<SnakeTextureSelection>()
         .init_resource::<GameSettings>()
         .init_resource::<LastKeyPress>()
         .add_startup_system(setup)
@@ -48,8 +50,8 @@ fn main() {
         )
         .add_system_set(
             SystemSet::on_enter(RunState::Playing)
-                // .with_system(game_reset.system())
-                .with_system(spawn_snake),
+                .with_system(game_reset)
+                .with_system(new_game_spawns),
         )
         .add_stage_before(
             CoreStage::Update,
@@ -71,4 +73,27 @@ fn main() {
 fn setup(mut commands: Commands) {
     commands
         .spawn_bundle(OrthographicCameraBundle::new_2d());
+}
+
+fn game_reset(
+    mut commands: Commands,
+    mut snake: ResMut<SnakeBody>,
+    mut positions: Query<(Entity, &Position)>,
+    mut last_pressed: ResMut<LastKeyPress>,
+    food_query: Query<Entity, With<Food>>,
+) {
+    for entity in food_query.iter() {
+        commands.entity(entity).despawn_recursive();
+    }
+
+    for position in &snake.segments {
+        if let Some((entity, _)) = positions
+            .iter_mut()
+            .find(|pos| pos.1 == position)
+        {
+            commands.entity(entity).despawn_recursive();
+        }
+    }
+    *snake = SnakeBody::default();
+    *last_pressed = LastKeyPress(KeyCode::Right);
 }

@@ -6,13 +6,13 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = "0.6.1"
-bevy_kira_audio = "0.8.0"
+bevy = "0.7.0"
+bevy_kira_audio = "0.9.0"
 # bevy_ninepatch = "0.6.0"
 itertools = "0.10.3"
-iyes_loopless = "0.2.0"
+iyes_loopless = "0.4.0"
 rand = "0.8.5"
 tracing = "0.1.33"
-kayak_ui = { git = "https://github.com/StarArawn/kayak_ui", rev = "a335cb454e271b8ee76c2dc03e63d064bbc8e5d3", features = [
+kayak_ui = { git = "https://github.com/christopherbiscardi/kayak_ui", rev = "91656eff2b815cbaf3690cc47e087a2b6dce90a2", features = [
     "bevy_renderer",
 ] }

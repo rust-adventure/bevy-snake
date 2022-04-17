@@ -21,22 +21,23 @@ impl Plugin for SpeedrunPlugin {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Run {
-    time: Duration,
-    score: u32,
+    pub time: Duration,
+    pub score: u32,
 }
 
+#[derive(Debug, Clone, PartialEq)]
 pub struct Speedruns {
     runs: Vec<Run>,
 }
 impl Speedruns {
-    fn sorted_by_score(&self) -> Vec<Run> {
+    pub fn sorted_by_score(&self) -> Vec<Run> {
         let mut runs = self.runs.clone();
         runs.sort_by_key(|run| run.score);
         runs
     }
-    fn sorted_by_run(&self) -> Vec<Run> {
+    pub fn sorted_by_run(&self) -> Vec<Run> {
         self.runs.clone()
     }
 }
