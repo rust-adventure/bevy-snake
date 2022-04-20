@@ -18,8 +18,11 @@ use kayak_ui::{
 };
 
 use crate::{
-    common::RunState, scoring::Speedruns,
-    settings::GameSettings, snake::SnakeTextureSelection,
+    assets::{FontAssets, ImageAssets},
+    common::RunState,
+    scoring::Speedruns,
+    settings::GameSettings,
+    snake::SnakeTextureSelection,
 };
 
 pub fn bind_gamestate(
@@ -57,10 +60,10 @@ pub fn bind_speedruns(
 pub fn new_game_ui_kayak(
     mut font_mapping: ResMut<FontMapping>,
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
     runstate: Res<State<RunState>>,
     settings: Res<GameSettings>,
     runs: Res<Speedruns>,
+    fonts: Res<FontAssets>,
 ) {
     commands.spawn_bundle(UICameraBundle::new());
     commands
@@ -68,9 +71,7 @@ pub fn new_game_ui_kayak(
     commands.insert_resource(bind(settings.clone()));
     commands.insert_resource(bind(runs.clone()));
 
-    font_mapping.set_default(
-        asset_server.load("roboto.kayak_font"),
-    );
+    font_mapping.set_default(fonts.roboto.clone());
 
     let context = BevyContext::new(|context| {
         render! {
@@ -120,15 +121,17 @@ fn GameMenu() {
     let container = {
         let mut world =
             context.get_global_mut::<World>().unwrap();
-        let asset_server =
-            world.get_resource::<AssetServer>().unwrap();
-        let handle: Handle<bevy::render::texture::Image> =
-            asset_server.load("green_panel.png");
+
+        let green_panel = world
+            .get_resource::<ImageAssets>()
+            .unwrap()
+            .green_panel
+            .clone();
 
         let mut image_manager = world
             .get_resource_mut::<ImageManager>()
             .unwrap();
-        image_manager.get(&handle)
+        image_manager.get(&green_panel)
     };
 
     let nine_patch_styles = Style {
@@ -286,26 +289,19 @@ struct BlueButtonProps {
 #[widget]
 fn BlueButton(props: BlueButtonProps) {
     let (blue_button_handle, blue_button_hover_handle) = {
-        let world = context.get_global_mut::<World>();
-        if world.is_err() {
-            return;
-        }
+        let mut world =
+            context.get_global_mut::<World>().unwrap();
 
-        let mut world = world.unwrap();
-
-        let (handle1, handle2) = {
-            let asset_server = world
-                .get_resource::<AssetServer>()
-                .unwrap();
-            let handle1: Handle<
-                bevy::render::texture::Image,
-            > = asset_server.load("blue_button09.png");
-            let handle2: Handle<
-                bevy::render::texture::Image,
-            > = asset_server.load("blue_button10.png");
-
-            (handle1, handle2)
-        };
+        let handle1 = world
+            .get_resource::<ImageAssets>()
+            .unwrap()
+            .blue_button09
+            .clone();
+        let handle2 = world
+            .get_resource::<ImageAssets>()
+            .unwrap()
+            .blue_button10
+            .clone();
 
         let mut image_manager = world
             .get_resource_mut::<ImageManager>()
@@ -373,21 +369,19 @@ fn BlueButton(props: BlueButtonProps) {
 #[widget]
 fn Speedrun() {
     let container = {
-        let world = context.get_global_mut::<World>();
-        if world.is_err() {
-            return;
-        }
-        let mut world = world.unwrap();
+        let mut world =
+            context.get_global_mut::<World>().unwrap();
 
-        let asset_server =
-            world.get_resource::<AssetServer>().unwrap();
-        let handle: Handle<bevy::render::texture::Image> =
-            asset_server.load("green_panel.png");
+        let green_panel = world
+            .get_resource::<ImageAssets>()
+            .unwrap()
+            .green_panel
+            .clone();
 
         let mut image_manager = world
             .get_resource_mut::<ImageManager>()
             .unwrap();
-        let container = image_manager.get(&handle);
+        let container = image_manager.get(&green_panel);
 
         container
     };
@@ -436,17 +430,23 @@ fn Checkbox(props: CheckboxProps) {
     let (empty_box, checked_box) = {
         let mut world =
             context.get_global_mut::<World>().unwrap();
-        let asset_server =
-            world.get_resource::<AssetServer>().unwrap();
-        let handle1 = asset_server.load("grey_box.png");
-        let handle2 =
-            asset_server.load("green_boxCheckmark.png");
+
+        let box_unchecked = world
+            .get_resource::<ImageAssets>()
+            .unwrap()
+            .box_unchecked
+            .clone();
+        let box_checked = world
+            .get_resource::<ImageAssets>()
+            .unwrap()
+            .box_checked
+            .clone();
 
         let mut image_manager = world
             .get_resource_mut::<ImageManager>()
             .unwrap();
-        let empty_box = image_manager.get(&handle1);
-        let checked_box = image_manager.get(&handle2);
+        let empty_box = image_manager.get(&box_unchecked);
+        let checked_box = image_manager.get(&box_checked);
 
         (empty_box, checked_box)
     };
@@ -491,15 +491,21 @@ fn Checkbox(props: CheckboxProps) {
 
 #[widget]
 fn SnakeSelector() {
+    {
+        let mut world =
+            context.get_global_mut::<World>().unwrap();
+        let snake_heads = world
+            .get_resource::<ImageAssets>()
+            .unwrap()
+            .snake_heads
+            .clone();
+        dbg!(&snake_heads[0]);
+    }
     let container: Vec<(usize, u16)> = (1..31)
         .into_iter()
         .map(|num| {
-            let world = context.get_global_mut::<World>();
-            if world.is_err() {
-                panic!("whoops");
-            }
-
-            let mut world = world.unwrap();
+            let mut world =
+                context.get_global_mut::<World>().unwrap();
 
             let asset_server = world
                 .get_resource::<AssetServer>()
@@ -675,14 +681,14 @@ fn SpeedrunsDisplay(props: SpeedrunsDisplayProps) {
         speedruns.get()
     };
 
-    let button_styles = Style {
-        position_type: StyleProp::Value(
-            PositionType::SelfDirected,
-        ),
-        width: StyleProp::Value(Units::Pixels(25.0)),
-        height: StyleProp::Value(Units::Pixels(25.0)),
-        ..Default::default()
-    };
+    // let button_styles = Style {
+    //     position_type: StyleProp::Value(
+    //         PositionType::SelfDirected,
+    //     ),
+    //     width: StyleProp::Value(Units::Pixels(25.0)),
+    //     height: StyleProp::Value(Units::Pixels(25.0)),
+    //     ..Default::default()
+    // };
 
     let container_styles = Style {
         left: StyleProp::Value(Units::Pixels(5.0)),

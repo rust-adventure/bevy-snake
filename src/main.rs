@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_kira_audio::AudioPlugin;
-// use bevy_ninepatch::NinePatchPlugin;
 use bevy_snake::{
+    assets::AssetsPlugin,
     board::spawn_board,
     common::{Game, RunState},
     control::{user_input, LastKeyPress},
@@ -27,6 +27,7 @@ fn main() {
             ..Default::default()
         })
         .add_plugins(DefaultPlugins)
+        .add_plugin(AssetsPlugin)
         .add_plugin(BevyKayakUIPlugin)
         .add_plugin(SpeedrunPlugin)
         .add_plugin(GameUiPlugin)
@@ -40,7 +41,6 @@ fn main() {
         .init_resource::<SnakeTextureSelection>()
         .init_resource::<GameSettings>()
         .init_resource::<LastKeyPress>()
-        .init_resource::<Keep>()
         .add_startup_system(setup)
         .add_startup_system(spawn_board)
         .add_state(RunState::Menu)
@@ -69,19 +69,6 @@ fn main() {
             ),
         )
         .run();
-}
-
-struct Keep(Handle<bevy::render::texture::Image>);
-
-impl FromWorld for Keep {
-    fn from_world(world: &mut World) -> Self {
-        let asset_server =
-            world.get_resource::<AssetServer>().unwrap();
-        let texture_handle: Handle<
-            bevy::render::texture::Image,
-        > = asset_server.load("snake_sprites.png");
-        Keep(texture_handle)
-    }
 }
 
 fn setup(mut commands: Commands) {

@@ -8,7 +8,9 @@ use rand::{
     distributions::WeightedIndex, prelude::Distribution,
 };
 
-use crate::{colors::MATERIALS, food::Food};
+use crate::{
+    assets::ImageAssets, colors::MATERIALS, food::Food,
+};
 
 const TILE_SIZE: f32 = 30.0;
 const TILE_SPACER: f32 = 0.0;
@@ -48,20 +50,11 @@ impl Board {
 
 pub fn spawn_board(
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+    images: Res<ImageAssets>,
 ) {
     let board = Board::new(20);
 
-    let texture_handle = asset_server.load("grass.png");
-    let texture_atlas = TextureAtlas::from_grid(
-        texture_handle,
-        Vec2::new(16.0, 16.0),
-        3,
-        1,
-    );
-    let texture_atlas_handle =
-        texture_atlases.add(texture_atlas);
+    let grass = images.grass.clone();
 
     let mut rng = rand::thread_rng();
     let weights = vec![3, 3, 1];
@@ -84,8 +77,7 @@ pub fn spawn_board(
                 .cartesian_product(0..board.size)
             {
                 builder.spawn_bundle(SpriteSheetBundle {
-                    texture_atlas: texture_atlas_handle
-                        .clone(),
+                    texture_atlas: grass.clone(),
                     sprite: TextureAtlasSprite {
                         index: dist.sample(&mut rng),
                         custom_size: Some(Vec2::new(
@@ -115,26 +107,12 @@ pub struct SpawnSnakeSegment {
 
 impl Command for SpawnSnakeSegment {
     fn write(self, world: &mut World) {
-        let texture_atlas_handle = {
-            let asset_server = world
-                .get_resource::<AssetServer>()
-                .unwrap();
-            let texture_handle =
-                asset_server.load("snake_sprites.png");
+        let snake = world
+            .get_resource::<ImageAssets>()
+            .unwrap()
+            .snake
+            .clone();
 
-            let mut texture_atlases = world
-                .get_resource_mut::<Assets<TextureAtlas>>()
-                .unwrap();
-
-            let texture_atlas = TextureAtlas::from_grid(
-                texture_handle,
-                Vec2::new(136.0, 136.0),
-                4,
-                30,
-            );
-
-            texture_atlases.add(texture_atlas)
-        };
         let (x, y) = {
             let board = world
                 .query::<&Board>()
@@ -151,11 +129,10 @@ impl Command for SpawnSnakeSegment {
             )
         };
 
-        // Get resources, edit entity, etc.
         world
             .spawn()
             .insert_bundle(SpriteSheetBundle {
-                texture_atlas: texture_atlas_handle.clone(),
+                texture_atlas: snake,
                 transform: Transform::from_xyz(x, y, 2.0),
                 sprite: TextureAtlasSprite {
                     index: 116,
@@ -176,13 +153,11 @@ pub struct SpawnApple {
 
 impl Command for SpawnApple {
     fn write(self, world: &mut World) {
-        let apple = {
-            let asset_server = world
-                .get_resource::<AssetServer>()
-                .unwrap();
-
-            asset_server.load("apple.png")
-        };
+        let apple = world
+            .get_resource::<ImageAssets>()
+            .unwrap()
+            .apple
+            .clone();
         let (x, y) = {
             let board = world
                 .query::<&Board>()

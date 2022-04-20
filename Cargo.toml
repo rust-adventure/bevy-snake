@@ -16,3 +16,4 @@ tracing = "0.1.33"
 kayak_ui = { git = "https://github.com/StarArawn/kayak_ui", rev = "0e9008dd204421b79035526ccafa1af296a51143", features = [
     "bevy_renderer",
 ] }
+bevy_asset_loader = { version = "0.10.0", features = ["2d"] }

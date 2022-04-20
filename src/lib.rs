@@ -6,6 +6,7 @@ use control::LastKeyPress;
 use food::{Food, NewFoodEvent};
 use snake::SnakeBody;
 
+pub mod assets;
 pub mod board;
 pub mod colors;
 pub mod common;
@@ -35,6 +36,7 @@ pub fn snake_movement(
     mut game: ResMut<Game>,
     audio: Res<Audio>,
     asset_server: Res<AssetServer>,
+    // sounds: Res<AudioAssets>,
 ) {
     let board = query_board.single();
 
