@@ -491,16 +491,6 @@ fn Checkbox(props: CheckboxProps) {
 
 #[widget]
 fn SnakeSelector() {
-    {
-        let mut world =
-            context.get_global_mut::<World>().unwrap();
-        let snake_heads = world
-            .get_resource::<ImageAssets>()
-            .unwrap()
-            .snake_heads
-            .clone();
-        dbg!(&snake_heads[0]);
-    }
     let container: Vec<(usize, u16)> = (1..31)
         .into_iter()
         .map(|num| {
