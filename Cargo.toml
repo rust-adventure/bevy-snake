@@ -13,6 +13,6 @@ itertools = "0.10.3"
 iyes_loopless = "0.4.0"
 rand = "0.8.5"
 tracing = "0.1.33"
-kayak_ui = { git = "https://github.com/christopherbiscardi/kayak_ui", rev = "91656eff2b815cbaf3690cc47e087a2b6dce90a2", features = [
+kayak_ui = { git = "https://github.com/StarArawn/kayak_ui", rev = "0e9008dd204421b79035526ccafa1af296a51143", features = [
     "bevy_renderer",
 ] }

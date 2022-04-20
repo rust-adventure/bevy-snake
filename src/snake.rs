@@ -2,12 +2,7 @@ use bevy::prelude::*;
 use itertools::Itertools;
 use std::collections::VecDeque;
 
-use crate::{
-    board::{
-        Board, Position, SpawnApple, SpawnSnakeSegment,
-    },
-    food::NewFoodEvent,
-};
+use crate::board::Position;
 
 pub struct SnakeTextureSelection(pub usize);
 
@@ -39,27 +34,6 @@ enum Direction {
     Down,
     Left,
     Right,
-}
-
-pub fn new_game_spawns(
-    mut commands: Commands,
-    snake: Res<SnakeBody>,
-    mut food_events: EventWriter<NewFoodEvent>,
-) {
-    for position in snake.segments.iter() {
-        commands.add(SpawnSnakeSegment {
-            position: *position,
-        });
-    }
-
-    food_events.send(NewFoodEvent);
-
-    // commands.add(SpawnApple {
-    //     position: Position {
-    //         x: board.size / 2,
-    //         y: board.size / 2,
-    //     },
-    // });
 }
 
 pub fn render_snake_segments(
@@ -144,7 +118,7 @@ pub fn render_snake_segments(
                         )
                     }
                 };
-                dbg!(snake_texture_index + 3);
+
                 sprite.index = snake_texture_index + 3;
                 transform.rotation = rotation;
             }

@@ -2,14 +2,15 @@ use bevy::prelude::*;
 use bevy_kira_audio::AudioPlugin;
 // use bevy_ninepatch::NinePatchPlugin;
 use bevy_snake::{
-    board::{spawn_board, Position},
+    board::spawn_board,
     common::{Game, RunState},
     control::{user_input, LastKeyPress},
-    food::{food_event_listener, Food, NewFoodEvent},
+    food::{food_event_listener, NewFoodEvent},
+    reset_game,
     scoring::SpeedrunPlugin,
     settings::GameSettings,
     snake::{
-        new_game_spawns, render_snake_segments, SnakeBody,
+        render_snake_segments, SnakeBody,
         SnakeTextureSelection,
     },
     snake_movement,
@@ -39,6 +40,7 @@ fn main() {
         .init_resource::<SnakeTextureSelection>()
         .init_resource::<GameSettings>()
         .init_resource::<LastKeyPress>()
+        .init_resource::<Keep>()
         .add_startup_system(setup)
         .add_startup_system(spawn_board)
         .add_state(RunState::Menu)
@@ -50,8 +52,7 @@ fn main() {
         )
         .add_system_set(
             SystemSet::on_enter(RunState::Playing)
-                .with_system(game_reset)
-                .with_system(new_game_spawns),
+                .with_system(reset_game),
         )
         .add_stage_before(
             CoreStage::Update,
@@ -70,30 +71,20 @@ fn main() {
         .run();
 }
 
+struct Keep(Handle<bevy::render::texture::Image>);
+
+impl FromWorld for Keep {
+    fn from_world(world: &mut World) -> Self {
+        let asset_server =
+            world.get_resource::<AssetServer>().unwrap();
+        let texture_handle: Handle<
+            bevy::render::texture::Image,
+        > = asset_server.load("snake_sprites.png");
+        Keep(texture_handle)
+    }
+}
+
 fn setup(mut commands: Commands) {
     commands
         .spawn_bundle(OrthographicCameraBundle::new_2d());
-}
-
-fn game_reset(
-    mut commands: Commands,
-    mut snake: ResMut<SnakeBody>,
-    mut positions: Query<(Entity, &Position)>,
-    mut last_pressed: ResMut<LastKeyPress>,
-    food_query: Query<Entity, With<Food>>,
-) {
-    for entity in food_query.iter() {
-        commands.entity(entity).despawn_recursive();
-    }
-
-    for position in &snake.segments {
-        if let Some((entity, _)) = positions
-            .iter_mut()
-            .find(|pos| pos.1 == position)
-        {
-            commands.entity(entity).despawn_recursive();
-        }
-    }
-    *snake = SnakeBody::default();
-    *last_pressed = LastKeyPress(KeyCode::Right);
 }

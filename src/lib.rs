@@ -121,11 +121,14 @@ pub fn snake_movement(
                         .iter()
                         .find(|(_, position)| {
                             position == &&segment
-                        })
-                        .unwrap();
-                    commands
-                        .entity(position_to_remove.0)
-                        .despawn_recursive();
+                        });
+                    if let Some(position) =
+                        position_to_remove
+                    {
+                        commands
+                            .entity(position.0)
+                            .despawn_recursive();
+                    }
                 }
             }
         }
@@ -134,4 +137,29 @@ pub fn snake_movement(
     if game.score_best < game.score {
         game.score_best = game.score;
     };
+}
+
+pub fn reset_game(
+    mut commands: Commands,
+    mut snake: ResMut<SnakeBody>,
+    positions: Query<(
+        Entity,
+        &Position,
+        &TextureAtlasSprite,
+    )>,
+    mut last_pressed: ResMut<LastKeyPress>,
+    food_query: Query<Entity, With<Food>>,
+    mut food_events: EventWriter<NewFoodEvent>,
+) {
+    for entity in food_query.iter() {
+        commands.entity(entity).despawn_recursive();
+    }
+
+    for position in positions.iter() {
+        commands.entity(position.0).despawn_recursive();
+    }
+
+    food_events.send(NewFoodEvent);
+    *snake = SnakeBody::default();
+    *last_pressed = LastKeyPress(KeyCode::Right);
 }

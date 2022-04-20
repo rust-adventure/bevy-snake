@@ -14,10 +14,7 @@ use kayak_ui::{
         Index, MutableBound, OnEvent, VecTracker,
         WidgetProps,
     },
-    widgets::{
-        App, Background, Element, If, Image, NinePatch,
-        Text,
-    },
+    widgets::{App, Element, If, NinePatch, Text},
 };
 
 use crate::{
