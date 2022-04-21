@@ -27,11 +27,11 @@ fn main() {
             ..Default::default()
         })
         .add_plugins(DefaultPlugins)
+        .add_plugin(AudioPlugin)
         .add_plugin(AssetsPlugin)
         .add_plugin(BevyKayakUIPlugin)
         .add_plugin(SpeedrunPlugin)
         .add_plugin(GameUiPlugin)
-        .add_plugin(AudioPlugin)
         .add_event::<NewFoodEvent>()
         .insert_resource(ClearColor(Color::rgb(
             0.52, 0.73, 0.17,

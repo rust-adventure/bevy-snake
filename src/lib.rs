@@ -1,3 +1,4 @@
+use assets::AudioAssets;
 use bevy::prelude::*;
 use bevy_kira_audio::Audio;
 use board::{Board, Position, SpawnSnakeSegment};
@@ -36,7 +37,7 @@ pub fn snake_movement(
     mut game: ResMut<Game>,
     audio: Res<Audio>,
     asset_server: Res<AssetServer>,
-    // sounds: Res<AudioAssets>,
+    sounds: Res<AudioAssets>,
 ) {
     let board = query_board.single();
 
@@ -88,7 +89,7 @@ pub fn snake_movement(
         | Some(GameOverReason::HitSnake)
         | Some(GameOverReason::Win) => {
             // send game over event
-            audio.play(asset_server.load("gameover.ogg"));
+            audio.play(sounds.gameover.clone());
             run_state.set(RunState::Menu).unwrap();
         }
         None => {
@@ -107,9 +108,7 @@ pub fn snake_movement(
                 Some((entity, _)) => {
                     game.score += 1;
 
-                    audio.play(
-                        asset_server.load("apple.ogg"),
-                    );
+                    audio.play(sounds.apple.clone());
                     commands
                         .entity(entity)
                         .despawn_recursive();

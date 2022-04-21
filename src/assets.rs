@@ -8,7 +8,7 @@ pub struct AssetsPlugin;
 
 impl Plugin for AssetsPlugin {
     fn build(&self, app: &mut App) {
-        app //.init_collection::<AudioAssets>()
+        app.init_collection::<AudioAssets>()
             .init_collection::<ImageAssets>()
             .init_collection::<FontAssets>();
     }
