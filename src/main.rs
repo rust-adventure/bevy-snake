@@ -1,3 +1,4 @@
+use snake::board::spawn_board;
 use bevy::prelude::*;
 
 fn main() {
@@ -11,6 +12,7 @@ fn main() {
             0.52, 0.73, 0.17,
         )))
         .add_startup_system(setup)
+        .add_startup_system(spawn_board)
         .run();
 }
 

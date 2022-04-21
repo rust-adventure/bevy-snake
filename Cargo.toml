@@ -1,5 +1,5 @@
 [package]
-name = "_in-progress-bevy-snake"
+name = "snake"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,3 +7,6 @@ edition = "2021"
 
 [dependencies]
 bevy = "0.7.0"
+itertools = "0.10.3"
+
+[features]
