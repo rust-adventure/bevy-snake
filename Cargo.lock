@@ -1696,6 +1696,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1aab8fc367588b89dcee83ab0fd66b72b50b72fa1904d7095045ace2b0c81c35"
 
 [[package]]
+name = "iyes_loopless"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a3631775f730617960d4801a5306d197ede8779a84179b6e79feaf6ff88a2f24"
+dependencies = [
+ "bevy_app",
+ "bevy_core",
+ "bevy_ecs",
+ "bevy_utils",
+]
+
+[[package]]
 name = "jni"
 version = "0.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2667,6 +2679,7 @@ version = "0.1.0"
 dependencies = [
  "bevy",
  "itertools",
+ "iyes_loopless",
 ]
 
 [[package]]

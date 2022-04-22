@@ -1,5 +1,7 @@
 use bevy::prelude::*;
-use snake::{board::spawn_board, snake::Snake};
+use iyes_loopless::prelude::*;
+use snake::{board::spawn_board, snake::Snake, tick};
+use std::time::Duration;
 
 fn main() {
     App::new()
@@ -14,6 +16,16 @@ fn main() {
         .init_resource::<Snake>()
         .add_startup_system(setup)
         .add_startup_system(spawn_board)
+        .add_stage_before(
+            CoreStage::Update,
+            "snake_tick",
+            FixedTimestepStage::new(Duration::from_millis(
+                100,
+            ))
+            .with_stage(
+                SystemStage::parallel().with_system(tick),
+            ),
+        )
         .run();
 }
 
