@@ -1,11 +1,14 @@
+use crate::GameState;
 use bevy::prelude::*;
+use iyes_loopless::prelude::*;
 
 pub struct ControlsPlugin;
 
 impl Plugin for ControlsPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<Direction>()
-            .add_system(user_input);
+        app.init_resource::<Direction>().add_system(
+            user_input.run_in_state(GameState::Playing),
+        );
     }
 }
 

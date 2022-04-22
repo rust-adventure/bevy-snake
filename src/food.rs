@@ -1,18 +1,22 @@
 use bevy::prelude::*;
 use itertools::Itertools;
+use iyes_loopless::prelude::*;
 use rand::prelude::SliceRandom;
 
 use crate::{
     board::{Board, Position, SpawnApple},
     snake::Snake,
+    GameState,
 };
 
 pub struct FoodPlugin;
 
 impl Plugin for FoodPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<NewFoodEvent>()
-            .add_system(food_event_listener);
+        app.add_event::<NewFoodEvent>().add_system(
+            food_event_listener
+                .run_in_state(GameState::Playing),
+        );
     }
 }
 pub struct NewFoodEvent;
