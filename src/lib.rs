@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use board::{Position, SpawnSnakeSegment};
-use food::Food;
+use food::{Food, NewFoodEvent};
 use snake::Snake;
 
 pub mod board;
@@ -15,6 +15,7 @@ pub fn tick(
     positions: Query<(Entity, &Position)>,
     input: Res<controls::Direction>,
     query_food: Query<(Entity, &Position), With<Food>>,
+    mut food_events: EventWriter<NewFoodEvent>,
 ) {
     let mut next_position = snake.segments[0].clone();
     match *input {
@@ -47,7 +48,7 @@ pub fn tick(
     match is_food {
         Some((entity, _)) => {
             commands.entity(entity).despawn_recursive();
-            // food_events.send(NewFoodEvent);
+            food_events.send(NewFoodEvent);
         }
         None => {
             let old_tail =

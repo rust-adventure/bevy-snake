@@ -7,8 +7,8 @@ const TILE_SIZE: f32 = 30.0;
 const TILE_SPACER: f32 = 0.0;
 
 #[derive(Component)]
-struct Board {
-    size: u8,
+pub struct Board {
+    pub size: u8,
     physical_size: f32,
 }
 
