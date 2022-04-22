@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use board::Position;
+use board::{Position, SpawnSnakeSegment};
 use snake::Snake;
 
 pub mod board;
@@ -14,6 +14,12 @@ pub fn tick(
     let mut next_position = snake.segments[0].clone();
     next_position.x += 1;
     snake.segments.push_front(next_position);
+    commands.add({
+        SpawnSnakeSegment {
+            position: next_position,
+        }
+    });
+
     let old_tail = snake.segments.pop_back().unwrap();
     if let Some((entity, _)) =
         positions.iter().find(|(_, pos)| pos == &&old_tail)
