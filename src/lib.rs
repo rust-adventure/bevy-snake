@@ -12,6 +12,8 @@ pub mod food;
 pub mod snake;
 pub mod ui;
 
+pub const STARTING_GAME_STATE: GameState = GameState::Menu;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum GameState {
     Menu,
