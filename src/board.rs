@@ -1,7 +1,12 @@
 use bevy::{ecs::system::Command, prelude::*};
 use itertools::Itertools;
+use rand::{
+    distributions::WeightedIndex, prelude::Distribution,
+};
 
-use crate::{colors::COLORS, food::Food};
+use crate::{
+    assets::ImageAssets, colors::COLORS, food::Food,
+};
 
 const TILE_SIZE: f32 = 30.0;
 const TILE_SPACER: f32 = 0.0;
@@ -39,8 +44,15 @@ pub struct Position {
     pub y: u8,
 }
 
-pub fn spawn_board(mut commands: Commands) {
+pub fn spawn_board(
+    mut commands: Commands,
+    images: Res<ImageAssets>,
+) {
     let board = Board::new(20);
+
+    let mut rng = rand::thread_rng();
+    let weights = vec![3, 3, 1];
+    let dist = WeightedIndex::new(weights).unwrap();
 
     commands
         .spawn_bundle(SpriteBundle {
@@ -58,17 +70,14 @@ pub fn spawn_board(mut commands: Commands) {
             for (x, y) in (0..board.size)
                 .cartesian_product(0..board.size)
             {
-                builder.spawn_bundle(SpriteBundle {
-                    sprite: Sprite {
-                        color: if (x + y) % 2 == 0 {
-                            COLORS.tile_placeholder
-                        } else {
-                            COLORS.tile_placeholder_dark
-                        },
+                builder.spawn_bundle(SpriteSheetBundle {
+                    texture_atlas: images.grass.clone(),
+                    sprite: TextureAtlasSprite {
+                        index: dist.sample(&mut rng),
                         custom_size: Some(Vec2::new(
                             TILE_SIZE, TILE_SIZE,
                         )),
-                        ..Sprite::default()
+                        ..TextureAtlasSprite::default()
                     },
                     transform: Transform::from_xyz(
                         board.cell_position_to_physical(x),
@@ -131,16 +140,22 @@ impl Command for SpawnApple {
         let y = board
             .cell_position_to_physical(self.position.y);
 
+        let apple = world
+            .get_resource::<ImageAssets>()
+            .unwrap()
+            .apple
+            .clone();
+
         world
             .spawn()
             .insert_bundle(SpriteBundle {
                 sprite: Sprite {
-                    color: COLORS.food,
                     custom_size: Some(Vec2::new(
                         TILE_SIZE, TILE_SIZE,
                     )),
                     ..Sprite::default()
                 },
+                texture: apple,
                 transform: Transform::from_xyz(x, y, 2.0),
                 ..Default::default()
             })
