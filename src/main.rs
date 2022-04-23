@@ -2,7 +2,8 @@ use bevy::prelude::*;
 use iyes_loopless::prelude::*;
 use snake::{
     board::spawn_board, controls::ControlsPlugin,
-    food::FoodPlugin, snake::Snake, tick, GameState,
+    food::FoodPlugin, snake::Snake, tick, ui::UiPlugin,
+    GameState,
 };
 use std::time::Duration;
 
@@ -15,6 +16,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(ControlsPlugin)
         .add_plugin(FoodPlugin)
+        .add_plugin(UiPlugin)
         .insert_resource(ClearColor(Color::rgb(
             0.52, 0.73, 0.17,
         )))
