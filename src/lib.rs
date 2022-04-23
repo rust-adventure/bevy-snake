@@ -130,3 +130,19 @@ pub fn tick(
         }
     }
 }
+
+pub fn reset_game(
+    mut commands: Commands,
+    mut snake: ResMut<Snake>,
+    positions: Query<Entity, With<Position>>,
+    mut last_pressed: ResMut<controls::Direction>,
+    mut food_events: EventWriter<NewFoodEvent>,
+) {
+    for entity in positions.iter() {
+        commands.entity(entity).despawn_recursive();
+    }
+
+    food_events.send(NewFoodEvent);
+    *snake = Default::default();
+    *last_pressed = Default::default();
+}

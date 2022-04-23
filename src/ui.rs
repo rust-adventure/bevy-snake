@@ -2,10 +2,10 @@ use bevy::{
     app::AppExit,
     prelude::{
         AssetServer, Commands, EventWriter, Plugin, Res,
-        ResMut,
+        ResMut, World,
     },
 };
-use iyes_loopless::state::CurrentState;
+use iyes_loopless::state::{CurrentState, NextState};
 use kayak_ui::{
     bevy::{
         BevyContext, BevyKayakUIPlugin, FontMapping,
@@ -108,9 +108,13 @@ fn GameMenu() {
     };
 
     let on_click_new_game =
-        OnEvent::new(|_, event| match event.event_type {
+        OnEvent::new(|ctx, event| match event.event_type {
             EventType::Click(..) => {
-                dbg!("new game!");
+                let mut world =
+                    ctx.get_global_mut::<World>().unwrap();
+                world.insert_resource(NextState(
+                    GameState::Playing,
+                ));
             }
             _ => {}
         });

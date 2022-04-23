@@ -2,8 +2,8 @@ use bevy::prelude::*;
 use iyes_loopless::prelude::*;
 use snake::{
     board::spawn_board, controls::ControlsPlugin,
-    food::FoodPlugin, snake::Snake, tick, ui::UiPlugin,
-    GameState, STARTING_GAME_STATE,
+    food::FoodPlugin, reset_game, snake::Snake, tick,
+    ui::UiPlugin, GameState, STARTING_GAME_STATE,
 };
 use std::time::Duration;
 
@@ -24,6 +24,7 @@ fn main() {
         .add_loopless_state(STARTING_GAME_STATE)
         .add_startup_system(setup)
         .add_startup_system(spawn_board)
+        .add_enter_system(&GameState::Playing, reset_game)
         .add_stage_before(
             CoreStage::Update,
             "snake_tick",

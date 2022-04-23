@@ -1,7 +1,7 @@
 use bevy::{ecs::system::Command, prelude::*};
 use itertools::Itertools;
 
-use crate::{colors::COLORS, food::Food, snake::Snake};
+use crate::{colors::COLORS, food::Food};
 
 const TILE_SIZE: f32 = 30.0;
 const TILE_SPACER: f32 = 0.0;
@@ -39,10 +39,7 @@ pub struct Position {
     pub y: u8,
 }
 
-pub fn spawn_board(
-    mut commands: Commands,
-    snake: Res<Snake>,
-) {
+pub fn spawn_board(mut commands: Commands) {
     let board = Board::new(20);
 
     commands
@@ -83,15 +80,6 @@ pub fn spawn_board(
             }
         })
         .insert(board);
-
-    for segment in snake.segments.iter() {
-        commands.add({
-            SpawnSnakeSegment { position: *segment }
-        });
-    }
-    commands.add(SpawnApple {
-        position: Position { x: 15, y: 15 },
-    })
 }
 
 pub struct SpawnSnakeSegment {
