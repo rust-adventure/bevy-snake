@@ -20,13 +20,14 @@ use kayak_ui::{
         widget, Binding, Bound, Color, EventType, Index,
         MutableBound, OnEvent,
     },
-    widgets::{App, Button, If, NinePatch, Text},
+    widgets::{App, If, NinePatch, Text},
 };
 
 use crate::{
     assets::ImageAssets, GameState, STARTING_GAME_STATE,
 };
 
+mod button;
 pub struct UiPlugin;
 
 impl Plugin for UiPlugin {
@@ -85,17 +86,6 @@ fn GameMenu() {
         row_between: StyleProp::Value(Units::Pixels(20.0)),
         top: StyleProp::Value(Units::Stretch(1.0)),
         width: StyleProp::Value(Units::Pixels(360.0)),
-        ..Default::default()
-    };
-
-    let button_styles = Style {
-        background_color: StyleProp::Value(Color::BLACK),
-        height: StyleProp::Value(Units::Pixels(50.0)),
-        width: StyleProp::Value(Units::Pixels(200.0)),
-        padding_top: StyleProp::Value(Units::Stretch(1.0)),
-        padding_bottom: StyleProp::Value(Units::Stretch(
-            1.0,
-        )),
         ..Default::default()
     };
 
@@ -164,33 +154,30 @@ fn GameMenu() {
                 border={Edge::all(10.0)}
                 handle={container}
             >
-                <Button
+                <button::SnakeButton
                     on_event={Some(on_click_new_game)}
-                    styles={Some(button_styles)}
                     >
                     <Text
                         size={20.0}
                         content={"New Game".to_string()}
                     />
-                </Button>
-                <Button
+                </button::SnakeButton>
+                <button::SnakeButton
                     on_event={Some(on_click_settings)}
-                    styles={Some(button_styles)}
                     >
                     <Text
                         size={20.0}
                         content={"Settings".to_string()}
                     />
-                </Button>
-                <Button
+                </button::SnakeButton>
+                <button::SnakeButton
                     on_event={Some(on_click_exit)}
-                    styles={Some(button_styles)}
                     >
                     <Text
                         size={20.0}
                         content={"Exit".to_string()}
                     />
-                </Button>
+                </button::SnakeButton>
             </NinePatch>
         </If>
     }
