@@ -107,15 +107,22 @@ impl Command for SpawnSnakeSegment {
         let y = board
             .cell_position_to_physical(self.position.y);
 
+        let snake = world
+            .get_resource::<ImageAssets>()
+            .unwrap()
+            .snake
+            .clone();
+
         world
             .spawn()
-            .insert_bundle(SpriteBundle {
-                sprite: Sprite {
-                    color: COLORS.snake,
+            .insert_bundle(SpriteSheetBundle {
+                texture_atlas: snake,
+                sprite: TextureAtlasSprite {
+                    index: 8,
                     custom_size: Some(Vec2::new(
                         TILE_SIZE, TILE_SIZE,
                     )),
-                    ..Sprite::default()
+                    ..TextureAtlasSprite::default()
                 },
                 transform: Transform::from_xyz(x, y, 2.0),
                 ..Default::default()
