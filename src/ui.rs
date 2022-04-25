@@ -31,6 +31,7 @@ use crate::{
 mod button;
 mod checkbox;
 mod settings;
+mod snake_selector;
 pub struct UiPlugin;
 
 impl Plugin for UiPlugin {

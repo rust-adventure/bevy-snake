@@ -7,7 +7,7 @@ use bevy::{
 };
 use itertools::Itertools;
 
-use crate::board::Position;
+use crate::{board::Position, settings::GameSettings};
 
 #[derive(Debug)]
 pub struct Snake {
@@ -57,8 +57,9 @@ pub fn render_snake_segments(
         &mut TextureAtlasSprite,
         &mut Transform,
     )>,
+    settings: Res<GameSettings>,
 ) {
-    let snake_texture_index = 0;
+    let snake_texture_index = settings.snake_index;
 
     let head = positions
         .iter_mut()

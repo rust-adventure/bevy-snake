@@ -13,7 +13,10 @@ use kayak_ui::{
     widgets::{Element, NinePatch, Text},
 };
 
-use super::{button, checkbox::Checkbox};
+use super::{
+    button, checkbox::Checkbox,
+    snake_selector::SnakeSelector,
+};
 use crate::{
     assets::ImageAssets,
     settings::{AudioSettings, GameSettings},
@@ -129,6 +132,7 @@ pub fn SettingsMenu(props: SettingsMenuProps) {
                     content={"Play Audio".to_string()}
                 />
             </Element>
+            <SnakeSelector/>
         </NinePatch>
     }
 }
