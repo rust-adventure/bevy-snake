@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_kira_audio::AudioPlugin;
 use iyes_loopless::prelude::*;
 use snake::{
     assets::AssetsPlugin,
@@ -20,6 +21,7 @@ fn main() {
             ..Default::default()
         })
         .add_plugins(DefaultPlugins)
+        .add_plugin(AudioPlugin)
         .add_plugin(ControlsPlugin)
         .add_plugin(FoodPlugin)
         .add_plugin(UiPlugin)

@@ -14,5 +14,6 @@ kayak_ui = { git = "https://github.com/StarArawn/kayak_ui", rev = "2e8c374943dc7
     "bevy_renderer",
 ] }
 bevy_asset_loader = { version = "0.10.0", features = ["2d"] }
+bevy_kira_audio = "0.9.0"
 
 [features]

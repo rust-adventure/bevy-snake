@@ -161,6 +161,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "30696a84d817107fc028e049980e09d5e140e8da8f1caeb17e8e950658a3cea9"
 
 [[package]]
+name = "atomic"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b88d82667eca772c4aa12f0f1348b3ae643424c8876448f3f7bd5787032e234c"
+dependencies = [
+ "autocfg",
+]
+
+[[package]]
 name = "autocfg"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -177,6 +186,12 @@ name = "base64"
 version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "904dfeac50f3cdaba28fc6f57fdcddb75f49ed61346676a78c4ffe55877802fd"
+
+[[package]]
+name = "basedrop"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "47611e530cf21bb89fbfe322aa8b1feae1ace33ff65f8ebf40fe3b4b99b7c9a2"
 
 [[package]]
 name = "bevy"
@@ -518,6 +533,18 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_path_to_error",
+]
+
+[[package]]
+name = "bevy_kira_audio"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c11fa0e2532fd0789508f33976cb06c42b2b38eb78538020c20829aa048c7316"
+dependencies = [
+ "anyhow",
+ "bevy",
+ "kira",
+ "parking_lot",
 ]
 
 [[package]]
@@ -1962,6 +1989,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "kira"
+version = "0.5.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6e7a756bb5de5a0dea42a6f514037db18736b56c9e2313928746025721f9cca0"
+dependencies = [
+ "atomic",
+ "basedrop",
+ "cpal",
+ "getrandom",
+ "indexmap",
+ "instant",
+ "lewton",
+ "rand",
+ "ringbuf",
+ "thiserror",
+ "uuid",
+]
+
+[[package]]
 name = "kqueue"
 version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2756,6 +2802,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "ringbuf"
+version = "0.2.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f65af18d50f789e74aaf23bbb3f65dcd22a3cb6e029b5bced149f6bd57c5c2a2"
+dependencies = [
+ "cache-padded",
+]
+
+[[package]]
 name = "rodio"
 version = "0.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2944,6 +2999,7 @@ version = "0.1.0"
 dependencies = [
  "bevy",
  "bevy_asset_loader",
+ "bevy_kira_audio",
  "itertools",
  "iyes_loopless",
  "kayak_ui",

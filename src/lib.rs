@@ -1,4 +1,6 @@
+use assets::AudioAssets;
 use bevy::prelude::*;
+use bevy_kira_audio::Audio;
 use board::{Board, Position, SpawnSnakeSegment};
 use controls::Direction::*;
 use food::{Food, NewFoodEvent};
@@ -36,6 +38,8 @@ pub fn tick(
     query_food: Query<(Entity, &Position), With<Food>>,
     mut food_events: EventWriter<NewFoodEvent>,
     query_board: Query<&Board>,
+    audio: Res<Audio>,
+    sounds: Res<AudioAssets>,
 ) {
     let board = query_board.single();
 
@@ -94,6 +98,7 @@ pub fn tick(
             commands.insert_resource(NextState(
                 GameState::Menu,
             ));
+            audio.play(sounds.gameover.clone());
         }
         None => {
             snake.segments.push_front(next_position);
@@ -114,6 +119,7 @@ pub fn tick(
                         .entity(entity)
                         .despawn_recursive();
                     food_events.send(NewFoodEvent);
+                    audio.play(sounds.apple.clone());
                 }
                 None => {
                     let old_tail =
