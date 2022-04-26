@@ -11,6 +11,7 @@ itertools = "0.10.3"
 iyes_loopless = "0.5.1"
 rand = "0.8.5"
 bevy_asset_loader = { version = "0.10.0", features = ["2d"] }
+bevy_kira_audio = "0.9.0"
 
 [dependencies.kayak_ui]
 git = "https://github.com/StarArawn/kayak_ui"

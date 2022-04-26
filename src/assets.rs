@@ -7,7 +7,8 @@ pub struct AssetsPlugin;
 
 impl Plugin for AssetsPlugin {
     fn build(&self, app: &mut App) {
-        app.init_collection::<ImageAssets>();
+        app.init_collection::<ImageAssets>()
+            .init_collection::<AudioAssets>();
     }
 }
 
@@ -45,4 +46,12 @@ pub struct ImageAssets {
     ))]
     #[asset(path = "snake_sprites.png")]
     pub snake: Handle<TextureAtlas>,
+}
+
+#[derive(AssetCollection)]
+pub struct AudioAssets {
+    #[asset(path = "gameover.ogg")]
+    pub gameover: Handle<bevy_kira_audio::AudioSource>,
+    #[asset(path = "apple.ogg")]
+    pub apple: Handle<bevy_kira_audio::AudioSource>,
 }
