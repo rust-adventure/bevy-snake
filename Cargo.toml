@@ -10,3 +10,8 @@ bevy = "0.7.0"
 itertools = "0.10.3"
 iyes_loopless = "0.5.1"
 rand = "0.8.5"
+
+[dependencies.kayak_ui]
+git = "https://github.com/StarArawn/kayak_ui"
+rev = "2e8c374943dc7be4f7febc95ae2a3d273ad90038"
+features = ["bevy_renderer"]

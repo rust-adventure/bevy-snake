@@ -10,6 +10,7 @@ pub mod colors;
 pub mod controls;
 pub mod food;
 pub mod snake;
+pub mod ui;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum GameState {
