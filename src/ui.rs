@@ -17,8 +17,8 @@ use kayak_ui::{
             Corner, Edge, LayoutType, Style, StyleProp,
             Units,
         },
-        widget, Binding, Bound, Color, EventType, Index,
-        MutableBound, OnEvent,
+        use_state, widget, Binding, Bound, Color,
+        EventType, Handler, Index, MutableBound, OnEvent,
     },
     widgets::{App, If, NinePatch, Text},
 };
@@ -28,6 +28,7 @@ use crate::{
 };
 
 mod button;
+mod settings;
 
 pub struct UiPlugin;
 
@@ -71,6 +72,12 @@ fn game_ui(
     commands.insert_resource(context);
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum Menu {
+    Main,
+    Settings,
+}
+
 #[widget]
 fn GameMenu() {
     let container_styles = Style {
@@ -89,6 +96,14 @@ fn GameMenu() {
         width: StyleProp::Value(Units::Pixels(360.0)),
         ..Default::default()
     };
+
+    let (menu_state, set_menu_state, ..) =
+        use_state!(Menu::Main);
+
+    let set_menu = set_menu_state.clone();
+    let set_menu_to_main = Handler::new(move |_| {
+        set_menu(Menu::Main);
+    });
 
     let show_menus = {
         let gamestate = context
@@ -127,12 +142,15 @@ fn GameMenu() {
             _ => {}
         });
 
+    let set_menu = set_menu_state.clone();
     let on_click_settings =
-        OnEvent::new(|_, event| match event.event_type {
-            EventType::Click(..) => {
-                dbg!("clicked settings");
+        OnEvent::new(move |_, event| {
+            match event.event_type {
+                EventType::Click(..) => {
+                    set_menu(Menu::Settings);
+                }
+                _ => {}
             }
-            _ => {}
         });
 
     let on_click_exit =
@@ -148,8 +166,12 @@ fn GameMenu() {
             _ => {}
         });
 
+    let show_main_menu = menu_state == Menu::Main;
+    let show_settings_menu = menu_state == Menu::Settings;
+
     rsx! {
     <If condition={show_menus}>
+       <If condition={show_main_menu}>
        <NinePatch
          styles={Some(container_styles)}
          border={Edge::all(10.0)}
@@ -180,6 +202,12 @@ fn GameMenu() {
                />
            </button::SnakeButton>
        </NinePatch>
+       </If>
+       <If condition={show_settings_menu}>
+         <settings::SettingsMenu
+             back={set_menu_to_main}
+         />
+       </If>
     </If>
     }
 }
