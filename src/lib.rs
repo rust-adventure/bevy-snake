@@ -9,6 +9,12 @@ pub mod controls;
 pub mod food;
 pub mod snake;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum GameState {
+    Menu,
+    Playing,
+}
+
 pub fn tick(
     mut commands: Commands,
     mut snake: ResMut<Snake>,
