@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{ecs::system::Command, prelude::*};
 use itertools::Itertools;
 
 use crate::{colors::COLORS, snake::Snake};
@@ -84,11 +84,33 @@ pub fn spawn_board(
         })
         .insert(board);
 
-    let board = Board::new(20);
-
     for segment in snake.segments.iter() {
-        commands
-            .spawn_bundle(SpriteBundle {
+        commands.add({
+            SpawnSnakeSegment { position: *segment }
+        });
+    }
+}
+
+pub struct SpawnSnakeSegment {
+    pub position: Position,
+}
+
+impl Command for SpawnSnakeSegment {
+    fn write(self, world: &mut World) {
+        let board = world
+            .query::<&Board>()
+            .iter(&world)
+            .next()
+            .unwrap();
+
+        let x = board
+            .cell_position_to_physical(self.position.x);
+        let y = board
+            .cell_position_to_physical(self.position.y);
+
+        world
+            .spawn()
+            .insert_bundle(SpriteBundle {
                 sprite: Sprite {
                     color: COLORS.snake,
                     custom_size: Some(Vec2::new(
@@ -96,17 +118,9 @@ pub fn spawn_board(
                     )),
                     ..Sprite::default()
                 },
-                transform: Transform::from_xyz(
-                    board.cell_position_to_physical(
-                        segment.x,
-                    ),
-                    board.cell_position_to_physical(
-                        segment.y,
-                    ),
-                    2.0,
-                ),
+                transform: Transform::from_xyz(x, y, 2.0),
                 ..Default::default()
             })
-            .insert(segment.clone());
+            .insert(self.position);
     }
 }
