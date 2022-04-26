@@ -7,6 +7,7 @@ use snake::{
     controls::ControlsPlugin,
     food::FoodPlugin,
     reset_game,
+    scoring::ScorePlugin,
     settings::SettingsPlugin,
     snake::{render_snake_segments, Snake},
     tick,
@@ -33,6 +34,7 @@ fn main() {
         )))
         .init_resource::<Snake>()
         .add_loopless_state(STARTING_GAME_STATE)
+        .add_plugin(ScorePlugin)
         .add_startup_system(setup)
         .add_startup_system(spawn_board)
         .add_system(

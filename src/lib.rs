@@ -5,6 +5,7 @@ use board::{Board, Position, SpawnSnakeSegment};
 use controls::Direction::*;
 use food::{Food, NewFoodEvent};
 use iyes_loopless::state::NextState;
+use scoring::Score;
 use settings::{AudioSettings, GameSettings};
 use snake::Snake;
 
@@ -13,6 +14,7 @@ pub mod board;
 pub mod colors;
 pub mod controls;
 pub mod food;
+pub mod scoring;
 pub mod settings;
 pub mod snake;
 pub mod ui;
@@ -43,6 +45,7 @@ pub fn tick(
     audio: Res<Audio>,
     sounds: Res<AudioAssets>,
     settings: Res<GameSettings>,
+    mut score: ResMut<Score>,
 ) {
     let board = query_board.single();
 
@@ -122,6 +125,7 @@ pub fn tick(
                         .entity(entity)
                         .despawn_recursive();
                     food_events.send(NewFoodEvent);
+                    score.score += 1;
                     if settings.audio == AudioSettings::ON {
                         audio.play(sounds.apple.clone());
                     }
@@ -149,6 +153,7 @@ pub fn reset_game(
     positions: Query<Entity, With<Position>>,
     mut last_pressed: ResMut<controls::Direction>,
     mut food_events: EventWriter<NewFoodEvent>,
+    mut score: ResMut<Score>,
 ) {
     for entity in positions.iter() {
         commands.entity(entity).despawn_recursive();
@@ -157,4 +162,5 @@ pub fn reset_game(
     food_events.send(NewFoodEvent);
     *snake = Default::default();
     *last_pressed = Default::default();
+    *score = Default::default();
 }
