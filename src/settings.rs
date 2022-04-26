@@ -17,12 +17,14 @@ pub enum AudioSettings {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct GameSettings {
     pub audio: AudioSettings,
+    pub snake_index: usize,
 }
 
 impl Default for GameSettings {
     fn default() -> Self {
         GameSettings {
             audio: AudioSettings::ON,
+            snake_index: 8,
         }
     }
 }

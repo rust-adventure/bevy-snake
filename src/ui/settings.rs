@@ -17,7 +17,9 @@ use super::button;
 use crate::{
     assets::ImageAssets,
     settings::{AudioSettings, GameSettings},
-    ui::checkbox::Checkbox,
+    ui::{
+        checkbox::Checkbox, snake_selector::SnakeSelector,
+    },
 };
 
 #[derive(WidgetProps, Clone, Debug, Default, PartialEq)]
@@ -128,6 +130,7 @@ pub fn SettingsMenu(props: SettingsMenuProps) {
                     content={"Play Audio".to_string()}
                 />
             </Element>
+            <SnakeSelector/>
         </NinePatch>
     }
 }
