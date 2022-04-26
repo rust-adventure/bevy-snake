@@ -5,6 +5,7 @@ use food::{Food, NewFoodEvent};
 use iyes_loopless::state::NextState;
 use snake::Snake;
 
+pub mod assets;
 pub mod board;
 pub mod colors;
 pub mod controls;
