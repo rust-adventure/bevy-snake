@@ -3,7 +3,7 @@ use iyes_loopless::prelude::*;
 use snake::{
     board::spawn_board, controls::ControlsPlugin,
     food::FoodPlugin, snake::Snake, tick, ui::UiPlugin,
-    GameState,
+    GameState, STARTING_GAME_STATE,
 };
 use std::time::Duration;
 
@@ -21,7 +21,7 @@ fn main() {
             0.52, 0.73, 0.17,
         )))
         .init_resource::<Snake>()
-        .add_loopless_state(GameState::Playing)
+        .add_loopless_state(STARTING_GAME_STATE)
         .add_startup_system(setup)
         .add_startup_system(spawn_board)
         .add_stage_before(
