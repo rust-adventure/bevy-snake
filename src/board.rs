@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use itertools::Itertools;
 
-use crate::colors::COLORS;
+use crate::{colors::COLORS, snake::Snake};
 
 const TILE_SIZE: f32 = 30.0;
 const TILE_SPACER: f32 = 0.0;
@@ -31,7 +31,18 @@ impl Board {
     }
 }
 
-pub fn spawn_board(mut commands: Commands) {
+#[derive(
+    Debug, PartialEq, Copy, Clone, Eq, Hash, Component,
+)]
+pub struct Position {
+    pub x: u8,
+    pub y: u8,
+}
+
+pub fn spawn_board(
+    mut commands: Commands,
+    snake: Res<Snake>,
+) {
     let board = Board::new(20);
 
     commands
@@ -72,4 +83,30 @@ pub fn spawn_board(mut commands: Commands) {
             }
         })
         .insert(board);
+
+    let board = Board::new(20);
+
+    for segment in snake.segments.iter() {
+        commands
+            .spawn_bundle(SpriteBundle {
+                sprite: Sprite {
+                    color: COLORS.snake,
+                    custom_size: Some(Vec2::new(
+                        TILE_SIZE, TILE_SIZE,
+                    )),
+                    ..Sprite::default()
+                },
+                transform: Transform::from_xyz(
+                    board.cell_position_to_physical(
+                        segment.x,
+                    ),
+                    board.cell_position_to_physical(
+                        segment.y,
+                    ),
+                    2.0,
+                ),
+                ..Default::default()
+            })
+            .insert(segment.clone());
+    }
 }
