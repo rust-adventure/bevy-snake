@@ -1,7 +1,7 @@
 use bevy::{ecs::system::Command, prelude::*};
 use itertools::Itertools;
 
-use crate::{colors::COLORS, snake::Snake};
+use crate::{colors::COLORS, food::Food, snake::Snake};
 
 const TILE_SIZE: f32 = 30.0;
 const TILE_SPACER: f32 = 0.0;
@@ -89,6 +89,9 @@ pub fn spawn_board(
             SpawnSnakeSegment { position: *segment }
         });
     }
+    commands.add(SpawnApple {
+        position: Position { x: 15, y: 15 },
+    })
 }
 
 pub struct SpawnSnakeSegment {
@@ -122,5 +125,39 @@ impl Command for SpawnSnakeSegment {
                 ..Default::default()
             })
             .insert(self.position);
+    }
+}
+
+pub struct SpawnApple {
+    pub position: Position,
+}
+
+impl Command for SpawnApple {
+    fn write(self, world: &mut World) {
+        let board = world
+            .query::<&Board>()
+            .iter(&world)
+            .next()
+            .unwrap();
+        let x = board
+            .cell_position_to_physical(self.position.x);
+        let y = board
+            .cell_position_to_physical(self.position.y);
+
+        world
+            .spawn()
+            .insert_bundle(SpriteBundle {
+                sprite: Sprite {
+                    color: COLORS.food,
+                    custom_size: Some(Vec2::new(
+                        TILE_SIZE, TILE_SIZE,
+                    )),
+                    ..Sprite::default()
+                },
+                transform: Transform::from_xyz(x, y, 2.0),
+                ..Default::default()
+            })
+            .insert(self.position)
+            .insert(Food);
     }
 }
