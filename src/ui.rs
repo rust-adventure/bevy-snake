@@ -9,7 +9,7 @@ use iyes_loopless::state::{CurrentState, NextState};
 use kayak_ui::{
     bevy::{
         BevyContext, BevyKayakUIPlugin, FontMapping,
-        UICameraBundle,
+        ImageManager, UICameraBundle,
     },
     core::{
         bind, render, rsx,
@@ -20,10 +20,14 @@ use kayak_ui::{
         widget, Binding, Bound, Color, EventType, Index,
         MutableBound, OnEvent,
     },
-    widgets::{App, Background, Button, If, Text},
+    widgets::{
+        App, Background, Button, If, NinePatch, Text,
+    },
 };
 
-use crate::{GameState, STARTING_GAME_STATE};
+use crate::{
+    assets::ImageAssets, GameState, STARTING_GAME_STATE,
+};
 
 pub struct UiPlugin;
 
@@ -107,6 +111,21 @@ fn GameMenu() {
         gamestate.get() == GameState::Menu
     };
 
+    let green_panel = context
+        .query_world::<Res<ImageAssets>, _, _>(|assets| {
+            assets.green_panel.clone()
+        });
+
+    let container = context
+        .get_global_mut::<World>()
+        .map(|mut world| {
+            world
+                .get_resource_mut::<ImageManager>()
+                .unwrap()
+                .get(&green_panel)
+        })
+        .unwrap();
+
     let on_click_new_game =
         OnEvent::new(|ctx, event| match event.event_type {
             EventType::Click(..) => {
@@ -142,8 +161,10 @@ fn GameMenu() {
 
     rsx! {
     <If condition={show_menus}>
-       <Background
-          styles={Some(container_styles)}
+       <NinePatch
+         styles={Some(container_styles)}
+         border={Edge::all(10.0)}
+         handle={container}
        >
            <Button
              on_event={Some(on_click_new_game)}
@@ -172,7 +193,7 @@ fn GameMenu() {
                    content={"Exit".to_string()}
                />
            </Button>
-       </Background>
+       </NinePatch>
     </If>
     }
 }
