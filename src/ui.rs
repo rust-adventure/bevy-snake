@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use bevy::{
     app::AppExit,
     prelude::{
@@ -20,12 +22,14 @@ use kayak_ui::{
         use_state, widget, Binding, Bound, Color,
         EventType, Handler, Index, MutableBound, OnEvent,
     },
-    widgets::{App, If, NinePatch, Text},
+    widgets::{App, Element, If, NinePatch, Text},
 };
 
 use crate::{
-    assets::ImageAssets, settings::GameSettings, GameState,
-    STARTING_GAME_STATE,
+    assets::ImageAssets,
+    scoring::{HighScore, Score, Timer},
+    settings::GameSettings,
+    GameState, STARTING_GAME_STATE,
 };
 
 mod button;
@@ -40,7 +44,10 @@ impl Plugin for UiPlugin {
             .insert_resource(bind(STARTING_GAME_STATE))
             .add_startup_system(game_ui)
             .add_system(bind_gamestate)
-            .add_system(bind_game_settings);
+            .add_system(bind_game_settings)
+            .add_system(bind_score)
+            .add_system(bind_high_score)
+            .add_system(bind_timer);
     }
 }
 
@@ -62,18 +69,64 @@ pub fn bind_game_settings(
     }
 }
 
+pub fn bind_score(
+    state: Res<Score>,
+    binding: Res<Binding<Score>>,
+) {
+    if state.is_changed() {
+        binding.set(state.clone());
+    }
+}
+
+pub fn bind_high_score(
+    state: Res<HighScore>,
+    binding: Res<Binding<HighScore>>,
+) {
+    if state.is_changed() {
+        binding.set(state.clone());
+    }
+}
+
+pub fn bind_timer(
+    state: Res<Timer>,
+    binding: Res<Binding<Duration>>,
+) {
+    match *state {
+        Timer {
+            start: _,
+            runtime: Some(duration),
+        } => {
+            binding.set(duration);
+        }
+        Timer {
+            start: Some(instant),
+            runtime: None,
+        } => {
+            binding.set(instant.elapsed());
+        }
+        _ => {
+            binding.set(Duration::from_secs(0));
+        }
+    };
+}
+
 // THIS ONLY RUNS ONCE. VERY IMPORTANT FACT.
 pub fn game_ui(
     mut commands: Commands,
     mut font_mapping: ResMut<FontMapping>,
     asset_server: Res<AssetServer>,
     settings: Res<GameSettings>,
+    score: Res<Score>,
+    high_score: Res<HighScore>,
 ) {
     commands.spawn_bundle(UICameraBundle::new());
     font_mapping.set_default(
         asset_server.load("roboto.kayak_font"),
     );
     commands.insert_resource(bind(settings.clone()));
+    commands.insert_resource(bind(score.clone()));
+    commands.insert_resource(bind(high_score.clone()));
+    commands.insert_resource(bind(Duration::from_secs(0)));
 
     let context = BevyContext::new(|context| {
         render! {
@@ -111,6 +164,34 @@ fn GameMenu() {
         ..Default::default()
     };
 
+    let gameboard_spacer_styles = Style {
+        bottom: StyleProp::Value(Units::Stretch(1.0)),
+        layout_type: StyleProp::Value(LayoutType::Column),
+        top: StyleProp::Value(Units::Stretch(1.0)),
+        width: StyleProp::Value(Units::Pixels(600.0)),
+        ..Default::default()
+    };
+
+    let row_styles = Style {
+        layout_type: StyleProp::Value(LayoutType::Row),
+        padding_top: StyleProp::Value(Units::Stretch(1.0)),
+        padding_bottom: StyleProp::Value(Units::Stretch(
+            1.0,
+        )),
+        ..Default::default()
+    };
+    let left_styles = Style {
+        padding_left: StyleProp::Value(Units::Stretch(1.0)),
+        height: StyleProp::Value(Units::Pixels(600.0)),
+        border: StyleProp::Value(Edge::all(25.0)),
+        ..Default::default()
+    };
+    let right_styles = Style {
+        height: StyleProp::Value(Units::Pixels(600.0)),
+        border: StyleProp::Value(Edge::all(25.0)),
+        ..Default::default()
+    };
+
     let (menu_state, set_menu_state, ..) =
         use_state!(Menu::Main);
 
@@ -127,6 +208,36 @@ fn GameMenu() {
 
         context.bind(&gamestate);
         gamestate.get() == GameState::Menu
+    };
+
+    let score = {
+        let score = context
+            .query_world::<Res<Binding<Score>>, _, _>(
+                |state| state.clone(),
+            );
+
+        context.bind(&score);
+        score.get().score
+    };
+
+    let high_score = {
+        let score = context
+            .query_world::<Res<Binding<HighScore>>, _, _>(
+                |state| state.clone(),
+            );
+
+        context.bind(&score);
+        score.get()
+    };
+
+    let current_run_time = {
+        let score = context
+            .query_world::<Res<Binding<Duration>>, _, _>(
+                |state| state.clone(),
+            );
+
+        context.bind(&score);
+        score.get()
     };
 
     let green_panel = context
@@ -184,44 +295,76 @@ fn GameMenu() {
     let show_settings_menu = menu_state == Menu::Settings;
 
     rsx! {
-       <If condition={show_menus}>
-         <If condition={show_main_menu}>
+    <Element styles={Some(row_styles)}>
+      <Element styles={Some(left_styles)}>
+        <Text
+          size={50.0}
+          content={"Current Run".to_string()}
+        />
+        <Text
+          size={50.0}
+          content={score.to_string()}
+        />
+        <Text
+          size={25.0}
+          content={format!("{} seconds",current_run_time.as_secs().to_string())}
+        />
+      </Element>
+      <Element styles={Some(gameboard_spacer_styles)}>
+        <If condition={show_menus}>
+          <If condition={show_main_menu}>
             <NinePatch
-                styles={Some(container_styles)}
-                border={Edge::all(10.0)}
-                handle={container}
+              styles={Some(container_styles)}
+              border={Edge::all(10.0)}
+              handle={container}
             >
-                <button::SnakeButton
-                    on_event={Some(on_click_new_game)}
-                    >
-                    <Text
-                        size={20.0}
-                        content={"New Game".to_string()}
-                    />
-                </button::SnakeButton>
-                <button::SnakeButton
-                    on_event={Some(on_click_settings)}
-                    >
-                    <Text
-                        size={20.0}
-                        content={"Settings".to_string()}
-                    />
-                </button::SnakeButton>
-                <button::SnakeButton
-                    on_event={Some(on_click_exit)}
-                    >
-                    <Text
-                        size={20.0}
-                        content={"Exit".to_string()}
-                    />
-                </button::SnakeButton>
+              <button::SnakeButton
+                on_event={Some(on_click_new_game)}
+              >
+                <Text
+                    size={20.0}
+                    content={"New Game".to_string()}
+                />
+              </button::SnakeButton>
+              <button::SnakeButton
+                on_event={Some(on_click_settings)}
+              >
+                <Text
+                    size={20.0}
+                    content={"Settings".to_string()}
+                />
+              </button::SnakeButton>
+              <button::SnakeButton
+                on_event={Some(on_click_exit)}
+              >
+                <Text
+                    size={20.0}
+                    content={"Exit".to_string()}
+                />
+              </button::SnakeButton>
             </NinePatch>
           </If>
           <If condition={show_settings_menu}>
-              <settings::SettingsMenu
-                back={set_menu_to_main}
-              />
+            <settings::SettingsMenu
+              back={set_menu_to_main}
+            />
           </If>
         </If>
-    }
+      </Element>
+      <Element styles={Some(right_styles)}>
+        <Text
+          size={50.0}
+          content={"High Score".to_string()}
+        />
+        <Text
+          size={50.0}
+          content={high_score.score.to_string()}
+        />
+        <Text
+          size={25.0}
+          content={format!("{} seconds",high_score.time.as_secs().to_string())}
+        />
+      </Element>
+    </Element>
+        }
 }
