@@ -24,10 +24,12 @@ use kayak_ui::{
 };
 
 use crate::{
-    assets::ImageAssets, GameState, STARTING_GAME_STATE,
+    assets::ImageAssets, settings::GameSettings, GameState,
+    STARTING_GAME_STATE,
 };
 
 mod button;
+mod checkbox;
 mod settings;
 
 pub struct UiPlugin;
@@ -37,7 +39,8 @@ impl Plugin for UiPlugin {
         app.add_plugin(BevyKayakUIPlugin)
             .insert_resource(bind(STARTING_GAME_STATE))
             .add_startup_system(game_ui)
-            .add_system(bind_gamestate);
+            .add_system(bind_gamestate)
+            .add_system(bind_game_settings);
     }
 }
 
@@ -50,16 +53,27 @@ pub fn bind_gamestate(
     }
 }
 
+pub fn bind_game_settings(
+    state: Res<GameSettings>,
+    binding: Res<Binding<GameSettings>>,
+) {
+    if state.is_changed() {
+        binding.set(state.clone());
+    }
+}
+
 // THIS ONLY RUNS ONCE. VERY IMPORTANT FACT.
 fn game_ui(
     mut commands: Commands,
     mut font_mapping: ResMut<FontMapping>,
     asset_server: Res<AssetServer>,
+    settings: Res<GameSettings>,
 ) {
     commands.spawn_bundle(UICameraBundle::new());
     font_mapping.set_default(
         asset_server.load("roboto.kayak_font"),
     );
+    commands.insert_resource(bind(settings.clone()));
 
     let context = BevyContext::new(|context| {
         render! {
