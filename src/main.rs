@@ -7,6 +7,7 @@ use snake::{
     controls::ControlsPlugin,
     food::FoodPlugin,
     reset_game,
+    settings::SettingsPlugin,
     snake::{render_snake_segments, Snake},
     tick,
     ui::UiPlugin,
@@ -22,6 +23,7 @@ fn main() {
         })
         .add_plugins(DefaultPlugins)
         .add_plugin(AudioPlugin)
+        .add_plugin(SettingsPlugin)
         .add_plugin(ControlsPlugin)
         .add_plugin(FoodPlugin)
         .add_plugin(UiPlugin)

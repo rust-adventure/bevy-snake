@@ -5,6 +5,7 @@ use board::{Board, Position, SpawnSnakeSegment};
 use controls::Direction::*;
 use food::{Food, NewFoodEvent};
 use iyes_loopless::state::NextState;
+use settings::{AudioSettings, GameSettings};
 use snake::Snake;
 
 pub mod assets;
@@ -12,6 +13,7 @@ pub mod board;
 pub mod colors;
 pub mod controls;
 pub mod food;
+pub mod settings;
 pub mod snake;
 pub mod ui;
 
@@ -40,6 +42,7 @@ pub fn tick(
     query_board: Query<&Board>,
     audio: Res<Audio>,
     sounds: Res<AudioAssets>,
+    settings: Res<GameSettings>,
 ) {
     let board = query_board.single();
 
@@ -96,7 +99,9 @@ pub fn tick(
             commands.insert_resource(NextState(
                 GameState::Menu,
             ));
-            audio.play(sounds.gameover.clone());
+            if settings.audio == AudioSettings::ON {
+                audio.play(sounds.gameover.clone());
+            }
         }
         None => {
             snake.segments.push_front(next_position);
@@ -117,7 +122,9 @@ pub fn tick(
                         .entity(entity)
                         .despawn_recursive();
                     food_events.send(NewFoodEvent);
-                    audio.play(sounds.apple.clone());
+                    if settings.audio == AudioSettings::ON {
+                        audio.play(sounds.apple.clone());
+                    }
                 }
                 None => {
                     let old_tail =
