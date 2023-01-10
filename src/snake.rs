@@ -2,14 +2,14 @@ use std::collections::VecDeque;
 
 use bevy::{
     math::Quat,
-    prelude::{Query, Res, Transform},
+    prelude::{Query, Res, Resource, Transform},
     sprite::TextureAtlasSprite,
 };
 use itertools::Itertools;
 
 use crate::{board::Position, settings::GameSettings};
 
-#[derive(Debug)]
+#[derive(Debug, Resource)]
 pub struct Snake {
     pub segments: VecDeque<Position>,
 }

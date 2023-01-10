@@ -55,7 +55,7 @@ pub fn spawn_board(
     let dist = WeightedIndex::new(weights).unwrap();
 
     commands
-        .spawn_bundle(SpriteBundle {
+        .spawn(SpriteBundle {
             sprite: Sprite {
                 color: COLORS.board,
                 custom_size: Some(Vec2::new(
@@ -70,7 +70,7 @@ pub fn spawn_board(
             for (x, y) in (0..board.size)
                 .cartesian_product(0..board.size)
             {
-                builder.spawn_bundle(SpriteSheetBundle {
+                builder.spawn(SpriteSheetBundle {
                     texture_atlas: images.grass.clone(),
                     sprite: TextureAtlasSprite {
                         index: dist.sample(&mut rng),
@@ -113,9 +113,8 @@ impl Command for SpawnSnakeSegment {
             .snake
             .clone();
 
-        world
-            .spawn()
-            .insert_bundle(SpriteSheetBundle {
+        world.spawn((
+            SpriteSheetBundle {
                 texture_atlas: snake,
                 sprite: TextureAtlasSprite {
                     index: 8,
@@ -126,8 +125,9 @@ impl Command for SpawnSnakeSegment {
                 },
                 transform: Transform::from_xyz(x, y, 2.0),
                 ..Default::default()
-            })
-            .insert(self.position);
+            },
+            self.position,
+        ));
     }
 }
 
@@ -153,9 +153,8 @@ impl Command for SpawnApple {
             .apple
             .clone();
 
-        world
-            .spawn()
-            .insert_bundle(SpriteBundle {
+        world.spawn((
+            SpriteBundle {
                 sprite: Sprite {
                     custom_size: Some(Vec2::new(
                         TILE_SIZE, TILE_SIZE,
@@ -165,8 +164,9 @@ impl Command for SpawnApple {
                 texture: apple,
                 transform: Transform::from_xyz(x, y, 2.0),
                 ..Default::default()
-            })
-            .insert(self.position)
-            .insert(Food);
+            },
+            self.position,
+            Food,
+        ));
     }
 }

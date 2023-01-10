@@ -14,7 +14,7 @@ pub enum AudioSettings {
     OFF,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Resource)]
 pub struct GameSettings {
     pub audio: AudioSettings,
     pub snake_index: usize,

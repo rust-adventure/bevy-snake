@@ -1,5 +1,7 @@
 use crate::GameState;
-use bevy::prelude::*;
+use bevy::prelude::{
+    App, Input, KeyCode, Plugin, Res, ResMut, Resource,
+};
 use iyes_loopless::prelude::*;
 
 pub struct ControlsPlugin;
@@ -12,6 +14,7 @@ impl Plugin for ControlsPlugin {
     }
 }
 
+#[derive(Resource)]
 pub enum Direction {
     Up,
     Down,

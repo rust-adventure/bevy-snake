@@ -1,7 +1,5 @@
 use bevy::prelude::*;
-use bevy_asset_loader::{
-    AssetCollection, AssetCollectionApp,
-};
+use bevy_asset_loader::prelude::*;
 
 pub struct AssetsPlugin;
 
@@ -12,7 +10,7 @@ impl Plugin for AssetsPlugin {
     }
 }
 
-#[derive(AssetCollection)]
+#[derive(AssetCollection, Resource)]
 pub struct AudioAssets {
     #[asset(path = "gameover.ogg")]
     pub gameover: Handle<bevy_kira_audio::AudioSource>,
@@ -20,7 +18,7 @@ pub struct AudioAssets {
     pub apple: Handle<bevy_kira_audio::AudioSource>,
 }
 
-#[derive(AssetCollection)]
+#[derive(AssetCollection, Resource)]
 pub struct ImageAssets {
     #[asset(path = "apple.png")]
     pub apple: Handle<Image>,

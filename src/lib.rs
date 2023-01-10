@@ -1,6 +1,6 @@
 use assets::AudioAssets;
 use bevy::prelude::*;
-use bevy_kira_audio::Audio;
+use bevy_kira_audio::{Audio, AudioControl};
 use board::{Board, Position, SpawnSnakeSegment};
 use controls::Direction::*;
 use food::{Food, NewFoodEvent};
