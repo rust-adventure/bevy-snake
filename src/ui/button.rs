@@ -6,6 +6,8 @@ use iyes_loopless::state::NextState;
 
 use crate::GameState;
 
+use super::MenuPage;
+
 const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
 const HOVERED_BUTTON: Color = Color::rgb(0.25, 0.25, 0.25);
 const PRESSED_BUTTON: Color = Color::rgb(0.35, 0.75, 0.35);
@@ -22,6 +24,7 @@ pub fn text_button_system(
     >,
     text_query: Query<&Text>,
     mut exit: EventWriter<AppExit>,
+    mut menu_page: ResMut<MenuPage>,
 ) {
     for (interaction, mut color, children) in
         &mut interaction_query
@@ -37,10 +40,15 @@ pub fn text_button_system(
                         );
                     }
                     "Settings" => {
+                        *menu_page = MenuPage::Settings;
                         // Show Settings Page
                     }
                     "Exit" => {
                         exit.send(AppExit);
+                    }
+                    "Back" => {
+                        *menu_page = MenuPage::Main;
+                        // Show Settings Page
                     }
                     _ => {
                         unimplemented!(
