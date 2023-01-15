@@ -13,11 +13,11 @@ impl Plugin for ScorePlugin {
             .init_resource::<Score>()
             .init_resource::<HighScore>()
             .add_enter_system(
-                &GameState::Playing,
+                GameState::Playing,
                 start_timer,
             )
             .add_exit_system(
-                &GameState::Playing,
+                GameState::Playing,
                 close_timer,
             );
     }

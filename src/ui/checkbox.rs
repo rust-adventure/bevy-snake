@@ -1,64 +1,65 @@
-use bevy::prelude::{Res, World};
+use bevy::prelude::{
+    Bundle, Commands, Component, Entity, In, Query, Res,
+    World,
+};
 use kayak_ui::{
-    bevy::ImageManager,
-    core::{
-        rsx,
-        styles::{Edge, Style, StyleProp, Units},
-        widget, OnEvent, WidgetProps,
-    },
-    widgets::NinePatch,
+    prelude::{KayakWidgetContext, Widget, WidgetName, *},
+    widgets::{KImage, KImageBundle},
 };
 
 use crate::assets::ImageAssets;
 
-#[derive(WidgetProps, Clone, Debug, Default, PartialEq)]
-pub struct CheckboxProps {
+#[derive(Component, Default, PartialEq, Clone)]
+pub struct CheckboxButton {
     pub checked: bool,
-    #[prop_field(OnEvent)]
-    pub on_event: Option<OnEvent>,
 }
-#[widget]
-pub fn Checkbox(props: CheckboxProps) {
-    let styles = Style {
-        width: StyleProp::Value(Units::Pixels(25.0)),
-        height: StyleProp::Value(Units::Pixels(25.0)),
-        ..Default::default()
-    };
 
-    let (handle_empty_box, handle_checked_box) = context
-        .query_world::<Res<ImageAssets>, _, _>(|assets| {
-            (
-                assets.box_unchecked.clone(),
-                assets.box_checked.clone(),
-            )
-        });
+impl Widget for CheckboxButton {}
 
-    let (empty_box, checked_box) = context
-        .get_global_mut::<World>()
-        .map(|mut world| {
-            let mut image_manager = world
-                .get_resource_mut::<ImageManager>()
-                .unwrap();
-            (
-                image_manager.get(&handle_empty_box),
-                image_manager.get(&handle_checked_box),
-            )
-        })
-        .unwrap();
+#[derive(Bundle)]
+pub struct CheckboxBundle {
+    pub button: CheckboxButton,
+    pub on_event: OnEvent,
+    pub widget_name: WidgetName,
+}
 
-    let on_event = props.on_event.clone();
+impl Default for CheckboxBundle {
+    fn default() -> Self {
+        Self {
+            button: CheckboxButton::default(),
+            on_event: OnEvent::default(),
+            widget_name: CheckboxButton::default()
+                .get_name(),
+        }
+    }
+}
+pub fn checkbox_button_render(
+    In((widget_context, entity)): In<(
+        KayakWidgetContext,
+        Entity,
+    )>,
+    mut commands: Commands,
+    images: Res<ImageAssets>,
+    checkbox_query: Query<&CheckboxButton>,
+) -> bool {
+    let parent_id = Some(entity);
 
-    let image = if props.checked {
-        checked_box
+    let data = checkbox_query.get(entity).unwrap();
+
+    let image = if data.checked {
+        images.box_checked.clone()
     } else {
-        empty_box
+        images.box_unchecked.clone()
     };
     rsx! {
-        <NinePatch
-            on_event={on_event}
-            border={Edge::all(1.0)}
-            styles={Some(styles)}
-            handle={image}
-        />
-    }
+        <KImageBundle
+        image={KImage(image)}
+        styles={KStyle {
+            width: StyleProp::Value(Units::Pixels(25.0)),
+            height: StyleProp::Value(Units::Pixels(25.0)),
+            ..Default::default()
+        }}
+    />
+    };
+    true
 }

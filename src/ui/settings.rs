@@ -1,105 +1,136 @@
-use bevy::prelude::{Res, ResMut, World};
+use std::default;
+
+use bevy::prelude::{
+    Bundle, Color, Commands, Component, Entity, In, Query,
+    Res, ResMut, World,
+};
 use kayak_ui::{
-    bevy::ImageManager,
-    core::{
-        rsx,
-        styles::{
-            Corner, Edge, LayoutType, Style, StyleProp,
-            Units,
-        },
-        widget, Binding, Bound, Color, EventType, Handler,
-        OnEvent, WidgetProps,
+    prelude::{Widget, WidgetName, *},
+    widgets::{
+        Element, ElementBundle, NinePatch, NinePatchBundle,
+        TextProps, TextWidgetBundle,
     },
-    widgets::{Element, NinePatch, Text},
 };
 
 use super::{
-    button, checkbox::Checkbox,
-    snake_selector::SnakeSelector,
+    button,
+    checkbox::CheckboxButton,
+    // snake_selector::SnakeSelector,
 };
 use crate::{
     assets::ImageAssets,
     settings::{AudioSettings, GameSettings},
+    ui::checkbox::CheckboxBundle,
 };
 
-#[derive(WidgetProps, Clone, Debug, Default, PartialEq)]
-pub struct SettingsMenuProps {
-    pub back: Handler<()>,
+#[derive(Component, Default, PartialEq, Clone)]
+pub struct SettingsMenu {
+    pub hidden: bool,
 }
 
-#[widget]
-pub fn SettingsMenu(props: SettingsMenuProps) {
-    let container_styles = Style {
-        border_radius: StyleProp::Value(Corner::all(15.0)),
-        background_color: StyleProp::Value(Color::WHITE),
-        bottom: StyleProp::Value(Units::Stretch(1.0)),
-        height: StyleProp::Value(Units::Pixels(500.0)),
-        layout_type: StyleProp::Value(LayoutType::Column),
-        left: StyleProp::Value(Units::Stretch(1.0)),
-        padding: StyleProp::Value(Edge::all(
-            Units::Stretch(1.0),
-        )),
-        right: StyleProp::Value(Units::Stretch(1.0)),
-        row_between: StyleProp::Value(Units::Pixels(20.0)),
-        top: StyleProp::Value(Units::Stretch(1.0)),
-        width: StyleProp::Value(Units::Pixels(360.0)),
-        ..Default::default()
-    };
+impl Widget for SettingsMenu {}
 
-    let checkbox_styles = Style {
+#[derive(Bundle)]
+pub struct SettingsMenuBundle {
+    pub menu: SettingsMenu,
+    pub on_event: OnEvent,
+    pub widget_name: WidgetName,
+}
+
+impl Default for SettingsMenuBundle {
+    fn default() -> Self {
+        Self {
+            menu: SettingsMenu::default(),
+            on_event: OnEvent::default(),
+            widget_name: SettingsMenu::default().get_name(),
+        }
+    }
+}
+
+pub fn settings_menu_render(
+    // This is a bevy feature which allows custom
+    // parameters to be passed into a system.
+    // In this case Kayak UI gives the system a
+    // `KayakWidgetContext` and an `Entity`.
+    In((widget_context, entity)): In<(
+        KayakWidgetContext,
+        Entity,
+    )>,
+    // The rest of the parameters are just like those found
+    // in a bevy system! In fact you can add whatever
+    // you would like here including more queries or
+    // lookups to resources within bevy's ECS.
+    mut commands: Commands,
+    images: Res<ImageAssets>,
+    // In this case we really only care about our buttons
+    // children! Let's query for them.
+    settings: ResMut<GameSettings>,
+    props: Query<&SettingsMenu>,
+) -> bool {
+    let props = props.get(entity).unwrap();
+    dbg!(&props.hidden);
+    let parent_id = Some(entity);
+
+    let checkbox_styles = KStyle {
         layout_type: StyleProp::Value(LayoutType::Row),
         col_between: StyleProp::Value(Units::Pixels(20.0)),
         ..Default::default()
     };
 
-    let green_panel = context
-        .query_world::<Res<ImageAssets>, _, _>(|assets| {
-            assets.green_panel.clone()
-        });
+    // let back = props.back.clone();
 
-    let container = context
-        .get_global_mut::<World>()
-        .map(|mut world| {
-            world
-                .get_resource_mut::<ImageManager>()
-                .unwrap()
-                .get(&green_panel)
-        })
-        .unwrap();
+    let on_click_back = OnEvent::new(
+        move |In((
+            event_dispatcher_context,
+            _,
+            event,
+            _entity,
+        )): In<(
+            EventDispatcherContext,
+            WidgetState,
+            Event,
+            Entity,
+        )>|
+            //   mut s: ResMut<GameSettings>| {
+                {
+            match event.event_type {
+                EventType::Click(..) => {
+                    // back.call(());
+                }
+                _ => {}
+            };
+            (event_dispatcher_context, event)
+        },
+    );
 
-    let settings = {
-        let settings = context
-            .query_world::<Res<Binding<GameSettings>>, _, _>(
-                move |settings| settings.clone(),
-            );
-
-        context.bind(&settings);
-        settings.get()
-    };
-
-    let back = props.back.clone();
-    let on_click_back = OnEvent::new(move |_, event| {
-        match event.event_type {
-            EventType::Click(..) => {
-                back.call(());
-            }
-            _ => {}
-        }
-    });
-
+    println!("ASFAJHSFASKJ");
     let on_click_audio = OnEvent::new(
-        move |context, event| match event.event_type {
-            EventType::Click(..) => {
-                context.query_world::<ResMut<GameSettings>, _, _>(
-            |mut settings| {
-                settings.audio = match settings.audio {
-                    AudioSettings::ON => AudioSettings::OFF,
-                    AudioSettings::OFF => AudioSettings::ON,
-                };
-            },
-        );
-            }
-            _ => {}
+        move |In((
+            event_dispatcher_context,
+            _,
+            event,
+            _entity,
+        )): In<(
+            EventDispatcherContext,
+            WidgetState,
+            Event,
+            Entity,
+        )>,
+              mut s: ResMut<GameSettings>| {
+            match event.event_type {
+                EventType::Click(..) => {
+                    s.audio = match s.audio {
+                        AudioSettings::ON => {
+                            AudioSettings::OFF
+                        }
+                        AudioSettings::OFF => {
+                            AudioSettings::ON
+                        }
+                    };
+                }
+                _ => {}
+            };
+            (event_dispatcher_context, event)
         },
     );
 
@@ -109,30 +140,35 @@ pub fn SettingsMenu(props: SettingsMenuProps) {
     };
 
     rsx! {
-        <NinePatch
-            styles={Some(container_styles)}
-            border={Edge::all(10.0)}
-            handle={container}
-        >
-            <button::SnakeButton
-                on_event={Some(on_click_back)}
-                >
-                <Text
-                    size={20.0}
-                    content={"Back".to_string()}
+        <ElementBundle>
+            // <button::SnakeButton
+            //     on_event={Some(on_click_back)}
+            //     >
+            //     <Text
+            //         size={20.0}
+            //         content={"Back".to_string()}
+            //     />
+            // </button::SnakeButton>
+          {if props.hidden {
+            constructor!{
+              <ElementBundle styles={checkbox_styles}>
+                <CheckboxBundle
+                    button={CheckboxButton{
+                        checked: audio_checked
+                    }}
+                    on_event={on_click_audio}
                 />
-            </button::SnakeButton>
-            <Element styles={Some(checkbox_styles)}>
-                <Checkbox
-                    checked={audio_checked}
-                    on_event={Some(on_click_audio)}
+                <TextWidgetBundle
+                    text={TextProps{
+                        size:{20.0},
+                        content:{"Play Audio".to_string()},
+                        ..Default::default()
+                    }}
                 />
-                <Text
-                    size={20.0}
-                    content={"Play Audio".to_string()}
-                />
-            </Element>
-            <SnakeSelector/>
-        </NinePatch>
-    }
+            </ElementBundle>}
+                }}
+            // <SnakeSelector/>
+        </ElementBundle>
+    };
+    true
 }
