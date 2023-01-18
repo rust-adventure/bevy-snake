@@ -8,9 +8,24 @@ use crate::GameState;
 
 use super::MenuPage;
 
-const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
-const HOVERED_BUTTON: Color = Color::rgb(0.25, 0.25, 0.25);
-const PRESSED_BUTTON: Color = Color::rgb(0.35, 0.75, 0.35);
+const NORMAL_BUTTON: Color = Color::Hsla {
+    hue: 0.0,
+    saturation: 0.0,
+    lightness: 0.0,
+    alpha: 1.0,
+};
+const HOVERED_BUTTON: Color = Color::Hsla {
+    hue: 0.0,
+    saturation: 0.0,
+    lightness: 0.25,
+    alpha: 1.0,
+};
+const PRESSED_BUTTON: Color = Color::Hsla {
+    hue: 0.0,
+    saturation: 0.0,
+    lightness: 0.0,
+    alpha: 1.0,
+};
 
 pub fn text_button_system(
     mut commands: Commands,
@@ -48,7 +63,7 @@ pub fn text_button_system(
                     }
                     "Back" => {
                         *menu_page = MenuPage::Main;
-                        // Show Settings Page
+                        // Show Main Menu Page
                     }
                     _ => {
                         unimplemented!(
