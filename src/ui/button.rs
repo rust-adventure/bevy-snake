@@ -1,10 +1,14 @@
 //! This example illustrates how to create a button that changes color and text based on its
 //! interaction state.
 
+use crate::{
+    assets::AudioAssets,
+    settings::{AudioSettings, GameSettings},
+    GameState,
+};
 use bevy::{app::AppExit, prelude::*};
+use bevy_kira_audio::{Audio, AudioControl};
 use iyes_loopless::state::NextState;
-
-use crate::GameState;
 
 use super::MenuPage;
 
@@ -40,6 +44,9 @@ pub fn text_button_system(
     text_query: Query<&Text>,
     mut exit: EventWriter<AppExit>,
     mut menu_page: ResMut<MenuPage>,
+    settings: Res<GameSettings>,
+    audio: Res<Audio>,
+    sounds: Res<AudioAssets>,
 ) {
     for (interaction, mut color, children) in
         &mut interaction_query
@@ -47,6 +54,9 @@ pub fn text_button_system(
         let text = text_query.get(children[0]).unwrap();
         match *interaction {
             Interaction::Clicked => {
+                if settings.audio == AudioSettings::ON {
+                    audio.play(sounds.apple.clone());
+                }
                 *color = PRESSED_BUTTON.into();
                 match text.sections[0].value.as_str() {
                     "New Game" => {
@@ -73,6 +83,9 @@ pub fn text_button_system(
                 }
             }
             Interaction::Hovered => {
+                if settings.audio == AudioSettings::ON {
+                    audio.play(sounds.menu_click.clone());
+                }
                 *color = HOVERED_BUTTON.into();
             }
             Interaction::None => {
@@ -107,14 +120,11 @@ pub fn spawn_button(
             parent.spawn(TextBundle::from_section(
                 text,
                 TextStyle {
-                    font: asset_server.load("roboto.ttf"),
+                    font: asset_server
+                        .load("AlfaSlabOne-Regular.ttf"),
                     font_size: 40.0,
                     color: Color::rgb(0.9, 0.9, 0.9),
                 },
             ));
         });
 }
-
-// images.blue_button10.clone()
-// } else {
-// images.blue_button09.clone()

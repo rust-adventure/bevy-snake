@@ -1,177 +1,140 @@
-use bevy::prelude::{AssetServer, Handle, ResMut, World};
-use kayak_ui::{
-    bevy::ImageManager,
-    core::{
-        rsx,
-        styles::{
-            Edge, LayoutType, Style, StyleProp, Units,
-        },
-        widget, EventType, OnEvent, WidgetProps,
-    },
-    widgets::{Element, NinePatch},
+use crate::{
+    assets::{AudioAssets, ImageAssets},
+    settings::{AudioSettings, GameSettings},
 };
+use bevy::prelude::*;
+use bevy_kira_audio::{Audio, AudioControl};
 
-use crate::settings::GameSettings;
+#[derive(Component)]
+pub struct SnakeHead(usize);
 
-#[widget]
-pub fn SnakeSelector() {
-    let container: Vec<(usize, u16)> = (1..31)
-        .into_iter()
-        .map(|num| {
-            let mut world =
-                context.get_global_mut::<World>().unwrap();
-
-            let asset_server = world
-                .get_resource::<AssetServer>()
-                .unwrap();
-
-            let handle: Handle<
-                bevy::render::texture::Image,
-            > = asset_server.load(&format!(
-                "snake_heads/snake_sprites_{:02}.png",
-                num
-            ));
-
-            let mut image_manager = world
-                .get_resource_mut::<ImageManager>()
-                .unwrap();
-            let image = image_manager.get(&handle);
-            image
-        })
-        .enumerate()
-        .collect();
-
-    let row_styles = Style {
-        col_between: StyleProp::Value(Units::Pixels(5.0)),
-        layout_type: StyleProp::Value(LayoutType::Row),
-        ..Default::default()
-    };
-    let snake_container_styles = Style {
-        width: StyleProp::Value(Units::Pixels(
-            6.0 * 30.0 + 5.0 * 5.0,
-        )),
-        height: StyleProp::Value(Units::Pixels(
-            5.0 * 30.0 + 4.0 * 15.0,
-        )),
-        row_between: StyleProp::Value(Units::Pixels(15.0)),
-        layout_type: StyleProp::Value(LayoutType::Column),
-        ..Default::default()
-    };
-
-    let one = container[0].clone();
-    let two = container[1].clone();
-    let three = container[2].clone();
-    let four = container[3].clone();
-    let five = container[4].clone();
-
-    let six = container[5].clone();
-    let seven = container[6].clone();
-    let eight = container[7].clone();
-    let nine = container[8].clone();
-    let ten = container[9].clone();
-
-    let eleven = container[10].clone();
-    let twelve = container[11].clone();
-    let thirteen = container[12].clone();
-    let fourteen = container[13].clone();
-    let fifteen = container[14].clone();
-
-    let sixteen = container[15].clone();
-    let seventeen = container[16].clone();
-    let eighteen = container[17].clone();
-    let nineteen = container[18].clone();
-    let twenty = container[19].clone();
-
-    let twentyone = container[20].clone();
-    let twentytwo = container[21].clone();
-    let twentythree = container[22].clone();
-    let twentyfour = container[23].clone();
-    let twentyfive = container[24].clone();
-
-    let twentysix = container[25].clone();
-    let twentyseven = container[26].clone();
-    let twentyeight = container[27].clone();
-    let twentynine = container[28].clone();
-    let thirty = container[29].clone();
-    rsx! {
-    <Element styles={Some(snake_container_styles)}>
-        <Element styles={Some(row_styles)}>
-            <SnakeHead handle={one}/>
-            <SnakeHead handle={two}/>
-            <SnakeHead handle={three}/>
-            <SnakeHead handle={four}/>
-            <SnakeHead handle={five}/>
-            <SnakeHead handle={six}/>
-        </Element>
-        <Element styles={Some(row_styles)}>
-            <SnakeHead handle={seven}/>
-            <SnakeHead handle={eight}/>
-            <SnakeHead handle={nine}/>
-            <SnakeHead handle={ten}/>
-            <SnakeHead handle={eleven}/>
-            <SnakeHead handle={twelve}/>
-        </Element>
-        <Element styles={Some(row_styles)}>
-            <SnakeHead handle={thirteen}/>
-            <SnakeHead handle={fourteen}/>
-            <SnakeHead handle={fifteen}/>
-            <SnakeHead handle={sixteen}/>
-            <SnakeHead handle={seventeen}/>
-            <SnakeHead handle={eighteen}/>
-        </Element>
-        <Element styles={Some(row_styles)}>
-            <SnakeHead handle={nineteen}/>
-            <SnakeHead handle={twenty}/>
-            <SnakeHead handle={twentyone}/>
-            <SnakeHead handle={twentytwo}/>
-            <SnakeHead handle={twentythree}/>
-            <SnakeHead handle={twentyfour}/>
-        </Element>
-        <Element styles={Some(row_styles)}>
-            <SnakeHead handle={twentyfive}/>
-            <SnakeHead handle={twentysix}/>
-            <SnakeHead handle={twentyseven}/>
-            <SnakeHead handle={twentyeight}/>
-            <SnakeHead handle={twentynine}/>
-            <SnakeHead handle={thirty}/>
-        </Element>
-    </Element>
-    }
-}
-
-#[derive(WidgetProps, Clone, Debug, Default, PartialEq)]
-struct SnakeHeadProps {
-    #[prop_field(OnEvent)]
-    on_event: Option<OnEvent>,
-    handle: (usize, u16),
-}
-
-#[widget]
-fn SnakeHead(props: SnakeHeadProps) {
-    let image_styles = Style {
-        width: StyleProp::Value(Units::Pixels(30.0)),
-        height: StyleProp::Value(Units::Pixels(30.0)),
-        ..Default::default()
-    };
-
-    let on_event = OnEvent::new(move |ctx, event| {
-        match event.event_type {
-            EventType::Click(..) => {
-                ctx.query_world::<ResMut<GameSettings>, _, _>(
-                    |mut settings| {
-                       settings.snake_index = props.handle.0 * 4;
-                    },
-                );
+pub fn snake_selector_interaction(
+    mut settings: ResMut<GameSettings>,
+    mut interaction_query: Query<
+        (&Interaction, &SnakeHead),
+        (Changed<Interaction>, With<Button>),
+    >,
+    audio: Res<Audio>,
+    sounds: Res<AudioAssets>,
+) {
+    for (interaction, snake_head) in &mut interaction_query
+    {
+        match *interaction {
+            Interaction::Clicked => {
+                if settings.audio == AudioSettings::ON {
+                    audio.play(sounds.apple.clone());
+                }
+                // every snake head in the textureatlas is at 0,4,8,12,..
+                // so we multiply by 4
+                settings.snake_index = snake_head.0 * 4;
             }
-            _ => (),
+            Interaction::Hovered => {}
+            Interaction::None => {}
         }
-    });
-    rsx! {
-        <NinePatch
-            on_event={Some(on_event)}
-            styles={Some(image_styles.clone())}
-            border={Edge::all(1.0)}
-            handle={props.handle.1}
-        />
     }
+}
+
+#[derive(Component)]
+pub struct CurrentSnake;
+
+pub fn update_current_snake(
+    settings: ResMut<GameSettings>,
+    images: Res<ImageAssets>,
+    mut image_query: Query<
+        &mut UiImage,
+        With<CurrentSnake>,
+    >,
+) {
+    for mut image in &mut image_query {
+        image.0 = images.snake_heads
+            [settings.snake_index / 4]
+            .clone();
+    }
+}
+
+pub fn spawn_snake_selector(
+    parent: &mut ChildBuilder,
+    images: Res<ImageAssets>,
+    asset_server: Res<AssetServer>,
+    current_snake_index: usize,
+) {
+    parent
+        .spawn(NodeBundle {
+            style: Style {
+                size: Size::new(Val::Auto, Val::Px(25.0)),
+                ..default()
+            },
+            ..default()
+        })
+        .with_children(|parent| {
+            parent.spawn((
+                ImageBundle {
+                    style: Style {
+                        size: Size::new(
+                            Val::Px(25.0),
+                            Val::Px(25.0),
+                        ),
+                        margin: UiRect::right(Val::Px(
+                            10.0,
+                        )),
+                        ..default()
+                    },
+                    image: UiImage(
+                        images.snake_heads
+                            [current_snake_index]
+                            .clone(),
+                    ),
+                    ..default()
+                },
+                CurrentSnake,
+            ));
+            parent.spawn(TextBundle::from_section(
+                "Current Snake",
+                TextStyle {
+                    font: asset_server.load("roboto.ttf"),
+                    font_size: 25.0,
+                    color: Color::rgb(0.0, 0.0, 0.0),
+                },
+            ));
+        });
+
+    parent
+        .spawn(NodeBundle {
+            style: Style {
+                flex_wrap: FlexWrap::Wrap,
+                size: Size::new(
+                    Val::Percent(100.0),
+                    Val::Auto,
+                ),
+                justify_content:
+                    JustifyContent::SpaceBetween,
+                ..default()
+            },
+            ..default()
+        })
+        .with_children(|parent| {
+            for (i, snake_head) in
+                images.snake_heads.iter().enumerate()
+            {
+                parent.spawn((
+                    ButtonBundle {
+                        style: Style {
+                            size: Size::new(
+                                Val::Px(50.0),
+                                Val::Px(50.0),
+                            ),
+                            margin: UiRect::all(Val::Px(
+                                3.0,
+                            )),
+                            ..default()
+                        },
+                        background_color: Color::ALICE_BLUE
+                            .into(),
+                        image: UiImage(snake_head.clone()),
+                        ..default()
+                    },
+                    SnakeHead(i),
+                ));
+            }
+        });
 }

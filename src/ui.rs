@@ -1,17 +1,21 @@
 use crate::{
-    assets::ImageAssets,
-    scoring::{HighScore, Score, Timer},
+    assets::{AudioAssets, ImageAssets},
+    scoring::{HighScore, Score},
     settings::{AudioSettings, GameSettings},
-    GameState, STARTING_GAME_STATE,
+    GameState,
 };
-use bevy::{app::AppExit, prelude::*};
-use iyes_loopless::{
-    prelude::{AppLooplessStateExt, IntoConditionalSystem},
-    state::{CurrentState, NextState},
+use bevy::prelude::*;
+use bevy_kira_audio::{Audio, AudioControl};
+use iyes_loopless::prelude::{
+    AppLooplessStateExt, IntoConditionalSystem,
 };
-use std::time::Duration;
+
+use self::snake_selector::{
+    snake_selector_interaction, update_current_snake,
+};
 
 mod button;
+mod snake_selector;
 // mod checkbox;
 // mod mainmenu;
 // mod settings;
@@ -34,6 +38,14 @@ impl Plugin for UiPlugin {
         )
         .add_system(
             audio_state.run_in_state(GameState::Menu),
+        )
+        .add_system(
+            snake_selector_interaction
+                .run_in_state(GameState::Menu),
+        )
+        .add_system(
+            update_current_snake
+                .run_in_state(GameState::Menu),
         );
     }
 }
@@ -86,10 +98,15 @@ fn audio_state(
     >,
     images: Res<ImageAssets>,
     mut settings: ResMut<GameSettings>,
+    audio: Res<Audio>,
+    sounds: Res<AudioAssets>,
 ) {
     for (interaction, mut image) in &mut interaction_query {
         match *interaction {
             Interaction::Clicked => {
+                if settings.audio == AudioSettings::ON {
+                    audio.play(sounds.apple.clone());
+                }
                 settings.audio = match settings.audio {
                     AudioSettings::ON => AudioSettings::OFF,
                     AudioSettings::OFF => AudioSettings::ON,
@@ -214,10 +231,7 @@ pub fn game_ui(
                             flex_direction:
                                 FlexDirection::Column,
                             justify_content:
-                                JustifyContent::SpaceEvenly,
-                            position_type:
-                                PositionType::Absolute,
-                            align_self: AlignSelf::Center,
+                                JustifyContent::SpaceBetween,
                             border: UiRect::all(Val::Px(
                                 10.0,
                             )),
@@ -235,30 +249,40 @@ pub fn game_ui(
                     );
                     parent
                         .spawn(NodeBundle {
-                            // node: todo!(),
-                            // style: todo!(),
+                            style: Style {
+                                size: Size::new(
+                                    Val::Auto,
+                                    Val::Px(25.0),
+                                ),
+                                ..default()
+                            },
                             ..default()
                         })
                         .with_children(|parent| {
-                            parent.spawn((ButtonBundle {
-                        style: Style {
-                            size: Size::new(
-                                Val::Px(25.0),
-                                Val::Px(25.0),
-                            ),
-                            // horizontally center child text
-                            justify_content:
-                                JustifyContent::Center,
-                            // vertically center child text
-                            align_items: AlignItems::Center,
-                            margin:UiRect::right(Val::Px(10.0)),
-                            ..default()
-                        },
-                        image: UiImage(
-                            images.box_checked.clone(),
-                        ),
-                        ..default()
-                    }, AudioSettingsCheckbox));
+                            parent.spawn((
+                                ButtonBundle {
+                                    style: Style {
+                                        size: Size::new(
+                                            Val::Px(25.0),
+                                            Val::Px(25.0),
+                                        ),
+                                        margin:
+                                            UiRect::right(
+                                                Val::Px(
+                                                    10.0,
+                                                ),
+                                            ),
+                                        ..default()
+                                    },
+                                    image: UiImage(
+                                        images
+                                            .box_checked
+                                            .clone(),
+                                    ),
+                                    ..default()
+                                },
+                                AudioSettingsCheckbox,
+                            ));
                             parent.spawn(
                                 TextBundle::from_section(
                                     "Play Audio",
@@ -275,6 +299,13 @@ pub fn game_ui(
                                 ),
                             );
                         });
+
+                    snake_selector::spawn_snake_selector(
+                        parent,
+                        images,
+                        asset_server,
+                        0,
+                    );
                 });
         });
 }
