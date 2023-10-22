@@ -27,7 +27,6 @@ const PRESSED_BUTTON: Color = Color::Hsla {
 };
 
 pub fn text_button_system(
-    mut commands: Commands,
     mut interaction_query: Query<
         (
             &Interaction,
@@ -97,10 +96,8 @@ pub fn spawn_button(
     parent
         .spawn(ButtonBundle {
             style: Style {
-                // size: Size::new(
-                //     Val::Percent(100.0),
-                //     Val::Px(65.0),
-                // ),
+                width: Val::Percent(100.0),
+                height: Val::Px(65.0),
 
                 // horizontally center child text
                 justify_content: JustifyContent::Center,

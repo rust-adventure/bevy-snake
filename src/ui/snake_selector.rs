@@ -62,7 +62,8 @@ pub fn spawn_snake_selector(
     parent
         .spawn(NodeBundle {
             style: Style {
-                // size: Size::new(Val::Auto, Val::Px(25.0)),
+                width: Val::Auto,
+                height: Val::Px(25.0),
                 ..default()
             },
             ..default()
@@ -71,10 +72,8 @@ pub fn spawn_snake_selector(
             parent.spawn((
                 ImageBundle {
                     style: Style {
-                        // size: Size::new(
-                        //     Val::Px(25.0),
-                        //     Val::Px(25.0),
-                        // ),
+                        width: Val::Px(25.0),
+                        height: Val::Px(25.0),
                         margin: UiRect::right(Val::Px(
                             10.0,
                         )),
@@ -103,10 +102,8 @@ pub fn spawn_snake_selector(
         .spawn(NodeBundle {
             style: Style {
                 flex_wrap: FlexWrap::Wrap,
-                // size: Size::new(
-                //     Val::Percent(100.0),
-                //     Val::Auto,
-                // ),
+                width: Val::Percent(100.0),
+                height: Val::Auto,
                 justify_content:
                     JustifyContent::SpaceBetween,
                 ..default()
@@ -120,10 +117,8 @@ pub fn spawn_snake_selector(
                 parent.spawn((
                     ButtonBundle {
                         style: Style {
-                            // size: Size::new(
-                            //     Val::Px(50.0),
-                            //     Val::Px(50.0),
-                            // ),
+                            width: Val::Px(50.0),
+                            height: Val::Px(50.0),
                             margin: UiRect::all(Val::Px(
                                 3.0,
                             )),

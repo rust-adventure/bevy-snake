@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use bevy::prelude::*;
 use bevy_kira_audio::AudioPlugin;
 use snake::{
@@ -21,7 +23,11 @@ fn main() {
         )))
         .add_plugins(DefaultPlugins)
         .add_state::<GameState>()
+        // 0.12 update unifies time
         // .insert_resource(Time::<Fixed>::from_seconds(0.1))
+        .insert_resource(FixedTime::new(
+            Duration::from_millis(100),
+        ))
         .add_systems(
             FixedUpdate,
             tick.run_if(in_state(GameState::Playing)),

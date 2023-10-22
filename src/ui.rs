@@ -70,7 +70,7 @@ fn change_menu(
         for (page, mut visibility) in menu_pages.iter_mut()
         {
             if page == &*menu {
-                *visibility = Visibility::Visible;
+                *visibility = Visibility::Inherited;
             } else {
                 *visibility = Visibility::Hidden;
             }
@@ -123,9 +123,9 @@ struct AudioSettingsCheckbox;
 pub fn game_ui(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    settings: Res<GameSettings>,
-    score: Res<Score>,
-    high_score: Res<HighScore>,
+    // settings: Res<GameSettings>,
+    // score: Res<Score>,
+    // high_score: Res<HighScore>,
     images: Res<ImageAssets>,
 ) {
     commands
@@ -139,11 +139,10 @@ pub fn game_ui(
                         alpha: 0.2,
                     },
                 ),
+
                 style: Style {
-                    // size: Size::new(
-                    //     Val::Percent(100.0),
-                    //     Val::Percent(100.0),
-                    // ),
+                    height: Val::Percent(100.),
+                    width: Val::Percent(100.),
                     justify_content: JustifyContent::Center,
                     position_type: PositionType::Absolute,
                     align_items: AlignItems::Center,
@@ -166,10 +165,8 @@ pub fn game_ui(
                             },
                         ),
                         style: Style {
-                            // size: Size::new(
-                            //     Val::Px(360.0),
-                            //     Val::Px(500.0),
-                            // ),
+                            width:     Val::Px(360.0),
+                            height:     Val::Px(500.0),
                             flex_direction:
                                 FlexDirection::Column,
                             justify_content:
@@ -216,10 +213,8 @@ pub fn game_ui(
                             },
                         ),
                         style: Style {
-                            // size: Size::new(
-                            //     Val::Px(360.0),
-                            //     Val::Px(500.0),
-                            // ),
+                            width:     Val::Px(360.0),
+                            height:     Val::Px(500.0),
                             flex_direction:
                                 FlexDirection::Column,
                             justify_content:
@@ -242,10 +237,8 @@ pub fn game_ui(
                     parent
                         .spawn(NodeBundle {
                             style: Style {
-                                // size: Size::new(
-                                //     Val::Auto,
-                                //     Val::Px(25.0),
-                                // ),
+                                width:     Val::Auto,
+                                height:     Val::Px(25.0),
                                 ..default()
                             },
                             ..default()
@@ -254,10 +247,8 @@ pub fn game_ui(
                             parent.spawn((
                                 ButtonBundle {
                                     style: Style {
-                                        // size: Size::new(
-                                        //     Val::Px(25.0),
-                                        //     Val::Px(25.0),
-                                        // ),
+                                        width:     Val::Px(25.0),
+                                        height:     Val::Px(25.0),
                                         margin:
                                             UiRect::right(
                                                 Val::Px(
