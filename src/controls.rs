@@ -1,15 +1,16 @@
 use crate::GameState;
 use bevy::prelude::{
-    App, Input, KeyCode, Plugin, Res, ResMut, Resource,
+    in_state, App, Input, IntoSystemConfigs, KeyCode,
+    Plugin, Res, ResMut, Resource, Update,
 };
-use iyes_loopless::prelude::*;
 
 pub struct ControlsPlugin;
 
 impl Plugin for ControlsPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<Direction>().add_system(
-            user_input.run_in_state(GameState::Playing),
+        app.init_resource::<Direction>().add_systems(
+            Update,
+            user_input.run_if(in_state(GameState::Playing)),
         );
     }
 }

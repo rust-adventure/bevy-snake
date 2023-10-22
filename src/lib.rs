@@ -4,7 +4,6 @@ use bevy_kira_audio::{Audio, AudioControl};
 use board::{Board, Position, SpawnSnakeSegment};
 use controls::Direction::*;
 use food::{Food, NewFoodEvent};
-use iyes_loopless::prelude::*;
 use scoring::Score;
 use settings::{AudioSettings, GameSettings};
 use snake::Snake;
@@ -19,10 +18,11 @@ pub mod settings;
 pub mod snake;
 pub mod ui;
 
-pub const STARTING_GAME_STATE: GameState = GameState::Menu;
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(
+    Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States,
+)]
 pub enum GameState {
+    #[default]
     Menu,
     Playing,
 }
@@ -46,6 +46,7 @@ pub fn tick(
     sounds: Res<AudioAssets>,
     settings: Res<GameSettings>,
     mut score: ResMut<Score>,
+    mut next_state: ResMut<NextState<GameState>>,
 ) {
     let board = query_board.single();
 
@@ -101,9 +102,7 @@ pub fn tick(
         Some(GameOverReason::HitWall)
         | Some(GameOverReason::HitSnake)
         | Some(GameOverReason::Win) => {
-            commands.insert_resource(NextState(
-                GameState::Menu,
-            ));
+            next_state.set(GameState::Menu);
             if settings.audio == AudioSettings::ON {
                 audio.play(sounds.gameover.clone());
             }

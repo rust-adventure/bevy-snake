@@ -1,3 +1,6 @@
+use self::snake_selector::{
+    snake_selector_interaction, update_current_snake,
+};
 use crate::{
     assets::{AudioAssets, ImageAssets},
     scoring::{HighScore, Score},
@@ -6,47 +9,35 @@ use crate::{
 };
 use bevy::prelude::*;
 use bevy_kira_audio::{Audio, AudioControl};
-use iyes_loopless::prelude::{
-    AppLooplessStateExt, IntoConditionalSystem,
-};
-
-use self::snake_selector::{
-    snake_selector_interaction, update_current_snake,
-};
-
 mod button;
 mod snake_selector;
-// mod checkbox;
-// mod mainmenu;
-// mod settings;
-// mod snake_selector;
-// use mainmenu::*;
+
 pub struct UiPlugin;
 
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_startup_system_to_stage(
-            StartupStage::PostStartup,
-            game_ui,
-        )
-        .add_system(button::text_button_system)
-        .insert_resource(MenuPage::Main)
-        .add_enter_system(GameState::Menu, show_menu)
-        .add_enter_system(GameState::Playing, hide_menu)
-        .add_system(
-            change_menu.run_in_state(GameState::Menu),
-        )
-        .add_system(
-            audio_state.run_in_state(GameState::Menu),
-        )
-        .add_system(
-            snake_selector_interaction
-                .run_in_state(GameState::Menu),
-        )
-        .add_system(
-            update_current_snake
-                .run_in_state(GameState::Menu),
-        );
+        app.insert_resource(MenuPage::Main)
+            .add_systems(PostStartup, game_ui)
+            .add_systems(Update, button::text_button_system)
+            .add_systems(
+                OnEnter(GameState::Menu),
+                show_menu,
+            )
+            .add_systems(
+                OnEnter(GameState::Playing),
+                hide_menu,
+            )
+            .add_systems(Update, button::text_button_system)
+            .add_systems(
+                Update,
+                (
+                    change_menu,
+                    audio_state,
+                    snake_selector_interaction,
+                    update_current_snake,
+                )
+                    .run_if(in_state(GameState::Menu)),
+            );
     }
 }
 
@@ -63,13 +54,13 @@ fn show_menu(
     mut menu: Query<&mut Visibility, With<MainMenu>>,
 ) {
     let mut menu = menu.single_mut();
-    *menu = Visibility::VISIBLE;
+    *menu = Visibility::Visible;
 }
 fn hide_menu(
     mut menu: Query<&mut Visibility, With<MainMenu>>,
 ) {
     let mut menu = menu.single_mut();
-    *menu = Visibility::INVISIBLE;
+    *menu = Visibility::Hidden;
 }
 fn change_menu(
     menu: Res<MenuPage>,
@@ -79,9 +70,9 @@ fn change_menu(
         for (page, mut visibility) in menu_pages.iter_mut()
         {
             if page == &*menu {
-                *visibility = Visibility::VISIBLE;
+                *visibility = Visibility::Visible;
             } else {
-                *visibility = Visibility::INVISIBLE;
+                *visibility = Visibility::Hidden;
             }
         }
     }
@@ -103,7 +94,7 @@ fn audio_state(
 ) {
     for (interaction, mut image) in &mut interaction_query {
         match *interaction {
-            Interaction::Clicked => {
+            Interaction::Pressed => {
                 if settings.audio == AudioSettings::ON {
                     audio.play(sounds.apple.clone());
                 }
@@ -111,14 +102,15 @@ fn audio_state(
                     AudioSettings::ON => AudioSettings::OFF,
                     AudioSettings::OFF => AudioSettings::ON,
                 };
-                *image = UiImage(match settings.audio {
-                    AudioSettings::ON => {
-                        images.box_checked.clone()
-                    }
-                    AudioSettings::OFF => {
-                        images.box_unchecked.clone()
-                    }
-                });
+                *image =
+                    UiImage::new(match settings.audio {
+                        AudioSettings::ON => {
+                            images.box_checked.clone()
+                        }
+                        AudioSettings::OFF => {
+                            images.box_unchecked.clone()
+                        }
+                    });
             }
             _ => {}
         }
@@ -148,10 +140,10 @@ pub fn game_ui(
                     },
                 ),
                 style: Style {
-                    size: Size::new(
-                        Val::Percent(100.0),
-                        Val::Percent(100.0),
-                    ),
+                    // size: Size::new(
+                    //     Val::Percent(100.0),
+                    //     Val::Percent(100.0),
+                    // ),
                     justify_content: JustifyContent::Center,
                     position_type: PositionType::Absolute,
                     align_items: AlignItems::Center,
@@ -174,10 +166,10 @@ pub fn game_ui(
                             },
                         ),
                         style: Style {
-                            size: Size::new(
-                                Val::Px(360.0),
-                                Val::Px(500.0),
-                            ),
+                            // size: Size::new(
+                            //     Val::Px(360.0),
+                            //     Val::Px(500.0),
+                            // ),
                             flex_direction:
                                 FlexDirection::Column,
                             justify_content:
@@ -214,7 +206,7 @@ pub fn game_ui(
             parent
                 .spawn((
                     NodeBundle {
-                        visibility: Visibility::INVISIBLE,
+                        visibility: Visibility::Hidden,
                         background_color: BackgroundColor(
                             Color::Hsla {
                                 hue: 0.0,
@@ -224,10 +216,10 @@ pub fn game_ui(
                             },
                         ),
                         style: Style {
-                            size: Size::new(
-                                Val::Px(360.0),
-                                Val::Px(500.0),
-                            ),
+                            // size: Size::new(
+                            //     Val::Px(360.0),
+                            //     Val::Px(500.0),
+                            // ),
                             flex_direction:
                                 FlexDirection::Column,
                             justify_content:
@@ -250,10 +242,10 @@ pub fn game_ui(
                     parent
                         .spawn(NodeBundle {
                             style: Style {
-                                size: Size::new(
-                                    Val::Auto,
-                                    Val::Px(25.0),
-                                ),
+                                // size: Size::new(
+                                //     Val::Auto,
+                                //     Val::Px(25.0),
+                                // ),
                                 ..default()
                             },
                             ..default()
@@ -262,10 +254,10 @@ pub fn game_ui(
                             parent.spawn((
                                 ButtonBundle {
                                     style: Style {
-                                        size: Size::new(
-                                            Val::Px(25.0),
-                                            Val::Px(25.0),
-                                        ),
+                                        // size: Size::new(
+                                        //     Val::Px(25.0),
+                                        //     Val::Px(25.0),
+                                        // ),
                                         margin:
                                             UiRect::right(
                                                 Val::Px(
@@ -274,7 +266,7 @@ pub fn game_ui(
                                             ),
                                         ..default()
                                     },
-                                    image: UiImage(
+                                    image: UiImage::new(
                                         images
                                             .box_checked
                                             .clone(),

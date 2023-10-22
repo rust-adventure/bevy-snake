@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 use itertools::Itertools;
-use iyes_loopless::prelude::*;
 use rand::prelude::SliceRandom;
 
 use crate::{
@@ -13,12 +12,14 @@ pub struct FoodPlugin;
 
 impl Plugin for FoodPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<NewFoodEvent>().add_system(
+        app.add_event::<NewFoodEvent>().add_systems(
+            Update,
             food_event_listener
-                .run_in_state(GameState::Playing),
+                .run_if(in_state(GameState::Playing)),
         );
     }
 }
+#[derive(Event)]
 pub struct NewFoodEvent;
 
 #[derive(Component)]

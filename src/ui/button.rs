@@ -1,6 +1,4 @@
-//! This example illustrates how to create a button that changes color and text based on its
-//! interaction state.
-
+use super::MenuPage;
 use crate::{
     assets::AudioAssets,
     settings::{AudioSettings, GameSettings},
@@ -8,9 +6,6 @@ use crate::{
 };
 use bevy::{app::AppExit, prelude::*};
 use bevy_kira_audio::{Audio, AudioControl};
-use iyes_loopless::state::NextState;
-
-use super::MenuPage;
 
 const NORMAL_BUTTON: Color = Color::Hsla {
     hue: 0.0,
@@ -47,22 +42,21 @@ pub fn text_button_system(
     settings: Res<GameSettings>,
     audio: Res<Audio>,
     sounds: Res<AudioAssets>,
+    mut next_state: ResMut<NextState<GameState>>,
 ) {
     for (interaction, mut color, children) in
         &mut interaction_query
     {
         let text = text_query.get(children[0]).unwrap();
         match *interaction {
-            Interaction::Clicked => {
+            Interaction::Pressed => {
                 if settings.audio == AudioSettings::ON {
                     audio.play(sounds.apple.clone());
                 }
                 *color = PRESSED_BUTTON.into();
                 match text.sections[0].value.as_str() {
                     "New Game" => {
-                        commands.insert_resource(
-                            NextState(GameState::Playing),
-                        );
+                        next_state.set(GameState::Playing);
                     }
                     "Settings" => {
                         *menu_page = MenuPage::Settings;
@@ -103,10 +97,11 @@ pub fn spawn_button(
     parent
         .spawn(ButtonBundle {
             style: Style {
-                size: Size::new(
-                    Val::Percent(100.0),
-                    Val::Px(65.0),
-                ),
+                // size: Size::new(
+                //     Val::Percent(100.0),
+                //     Val::Px(65.0),
+                // ),
+
                 // horizontally center child text
                 justify_content: JustifyContent::Center,
                 // vertically center child text

@@ -96,7 +96,7 @@ pub struct SpawnSnakeSegment {
 }
 
 impl Command for SpawnSnakeSegment {
-    fn write(self, world: &mut World) {
+    fn apply(self, world: &mut World) {
         let board = world
             .query::<&Board>()
             .iter(&world)
@@ -136,7 +136,7 @@ pub struct SpawnApple {
 }
 
 impl Command for SpawnApple {
-    fn write(self, world: &mut World) {
+    fn apply(self, world: &mut World) {
         let board = world
             .query::<&Board>()
             .iter(&world)
