@@ -24,7 +24,8 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_state::<GameState>()
         // 0.12 update unifies time
-        // .insert_resource(Time::<Fixed>::from_seconds(0.1))
+        // .insert_resource(Time::<Fixed>::from_seconds(0.
+        // 1))
         .insert_resource(FixedTime::new(
             Duration::from_millis(100),
         ))

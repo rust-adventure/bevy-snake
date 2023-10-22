@@ -24,7 +24,8 @@ pub fn snake_selector_interaction(
                 if settings.audio == AudioSettings::ON {
                     audio.play(sounds.apple.clone());
                 }
-                // every snake head in the textureatlas is at 0,4,8,12,..
+                // every snake head in the textureatlas is
+                // at 0,4,8,12,..
                 // so we multiply by 4
                 settings.snake_index = snake_head.0 * 4;
             }
