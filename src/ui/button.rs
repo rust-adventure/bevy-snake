@@ -26,6 +26,9 @@ const PRESSED_BUTTON: Color = Color::Hsla {
     alpha: 1.0,
 };
 
+#[derive(Component)]
+pub struct TextButton;
+
 pub fn text_button_system(
     mut interaction_query: Query<
         (
@@ -33,7 +36,7 @@ pub fn text_button_system(
             &mut BackgroundColor,
             &Children,
         ),
-        (Changed<Interaction>, With<Button>),
+        (Changed<Interaction>, With<TextButton>),
     >,
     text_query: Query<&Text>,
     mut exit: EventWriter<AppExit>,
@@ -94,20 +97,23 @@ pub fn spawn_button(
     text: &str,
 ) {
     parent
-        .spawn(ButtonBundle {
-            style: Style {
-                width: Val::Percent(100.0),
-                height: Val::Px(65.0),
+        .spawn((
+            ButtonBundle {
+                style: Style {
+                    width: Val::Percent(100.0),
+                    height: Val::Px(65.0),
 
-                // horizontally center child text
-                justify_content: JustifyContent::Center,
-                // vertically center child text
-                align_items: AlignItems::Center,
+                    // horizontally center child text
+                    justify_content: JustifyContent::Center,
+                    // vertically center child text
+                    align_items: AlignItems::Center,
+                    ..default()
+                },
+                background_color: NORMAL_BUTTON.into(),
                 ..default()
             },
-            background_color: NORMAL_BUTTON.into(),
-            ..default()
-        })
+            TextButton,
+        ))
         .with_children(|parent| {
             parent.spawn(TextBundle::from_section(
                 text,

@@ -127,6 +127,7 @@ pub fn game_ui(
     // score: Res<Score>,
     // high_score: Res<HighScore>,
     images: Res<ImageAssets>,
+    atlases: Res<Assets<TextureAtlas>>,
 ) {
     commands
         .spawn((
@@ -288,6 +289,7 @@ pub fn game_ui(
                         images,
                         asset_server,
                         0,
+                        &atlases
                     );
                 });
         });

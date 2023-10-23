@@ -24,10 +24,7 @@ pub fn snake_selector_interaction(
                 if settings.audio == AudioSettings::ON {
                     audio.play(sounds.apple.clone());
                 }
-                // every snake head in the textureatlas is
-                // at 0,4,8,12,..
-                // so we multiply by 4
-                settings.snake_index = snake_head.0 * 4;
+                settings.snake_index = snake_head.0;
             }
             Interaction::Hovered => {}
             Interaction::None => {}
@@ -40,17 +37,13 @@ pub struct CurrentSnake;
 
 pub fn update_current_snake(
     settings: ResMut<GameSettings>,
-    images: Res<ImageAssets>,
     mut image_query: Query<
-        &mut UiImage,
+        &mut UiTextureAtlasImage,
         With<CurrentSnake>,
     >,
 ) {
     for mut image in &mut image_query {
-        *image = UiImage::new(
-            images.snake_heads[settings.snake_index / 4]
-                .clone(),
-        );
+        image.index = settings.snake_index;
     }
 }
 
@@ -59,6 +52,7 @@ pub fn spawn_snake_selector(
     images: Res<ImageAssets>,
     asset_server: Res<AssetServer>,
     current_snake_index: usize,
+    atlases: &Res<Assets<TextureAtlas>>,
 ) {
     parent
         .spawn(NodeBundle {
@@ -71,7 +65,7 @@ pub fn spawn_snake_selector(
         })
         .with_children(|parent| {
             parent.spawn((
-                ImageBundle {
+                AtlasImageBundle {
                     style: Style {
                         width: Val::Px(25.0),
                         height: Val::Px(25.0),
@@ -80,11 +74,12 @@ pub fn spawn_snake_selector(
                         )),
                         ..default()
                     },
-                    image: UiImage::new(
-                        images.snake_heads
-                            [current_snake_index]
-                            .clone(),
-                    ),
+                    texture_atlas: images.snake.clone(),
+                    texture_atlas_image:
+                        UiTextureAtlasImage {
+                            index: current_snake_index,
+                            ..default()
+                        },
                     ..default()
                 },
                 CurrentSnake,
@@ -112,28 +107,39 @@ pub fn spawn_snake_selector(
             ..default()
         })
         .with_children(|parent| {
-            for (i, snake_head) in
-                images.snake_heads.iter().enumerate()
+            let atlas = atlases
+                .get(&images.snake)
+                .expect("snake textureatlas to be loaded");
+
+            for (i, _rect) in
+                atlas.textures.iter().enumerate().step_by(4)
             {
-                parent.spawn((
-                    ButtonBundle {
-                        style: Style {
-                            width: Val::Px(50.0),
-                            height: Val::Px(50.0),
-                            margin: UiRect::all(Val::Px(
-                                3.0,
-                            )),
+                parent
+                    .spawn((
+                        ButtonBundle::default(),
+                        SnakeHead(i),
+                    ))
+                    .with_children(|parent| {
+                        parent.spawn(AtlasImageBundle {
+                            style: Style {
+                                width: Val::Px(50.0),
+                                height: Val::Px(50.0),
+                                margin: UiRect::all(
+                                    Val::Px(3.0),
+                                ),
+                                ..default()
+                            },
+                            texture_atlas: images
+                                .snake
+                                .clone(),
+                            texture_atlas_image:
+                                UiTextureAtlasImage {
+                                    index: i,
+                                    ..default()
+                                },
                             ..default()
-                        },
-                        background_color: Color::ALICE_BLUE
-                            .into(),
-                        image: UiImage::new(
-                            snake_head.clone(),
-                        ),
-                        ..default()
-                    },
-                    SnakeHead(i),
-                ));
+                        });
+                    });
             }
         });
 }

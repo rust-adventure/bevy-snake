@@ -54,40 +54,4 @@ pub struct ImageAssets {
     ))]
     #[asset(path = "snake_sprites.png")]
     pub snake: Handle<TextureAtlas>,
-    #[asset(
-        paths(
-            "snake_heads/snake_sprites_01.png",
-            "snake_heads/snake_sprites_02.png",
-            "snake_heads/snake_sprites_03.png",
-            "snake_heads/snake_sprites_04.png",
-            "snake_heads/snake_sprites_05.png",
-            "snake_heads/snake_sprites_06.png",
-            "snake_heads/snake_sprites_07.png",
-            "snake_heads/snake_sprites_08.png",
-            "snake_heads/snake_sprites_09.png",
-            "snake_heads/snake_sprites_10.png",
-            "snake_heads/snake_sprites_11.png",
-            "snake_heads/snake_sprites_12.png",
-            "snake_heads/snake_sprites_13.png",
-            "snake_heads/snake_sprites_14.png",
-            "snake_heads/snake_sprites_15.png",
-            "snake_heads/snake_sprites_16.png",
-            "snake_heads/snake_sprites_17.png",
-            "snake_heads/snake_sprites_18.png",
-            "snake_heads/snake_sprites_19.png",
-            "snake_heads/snake_sprites_20.png",
-            "snake_heads/snake_sprites_21.png",
-            "snake_heads/snake_sprites_22.png",
-            "snake_heads/snake_sprites_23.png",
-            "snake_heads/snake_sprites_24.png",
-            "snake_heads/snake_sprites_25.png",
-            "snake_heads/snake_sprites_26.png",
-            "snake_heads/snake_sprites_27.png",
-            "snake_heads/snake_sprites_28.png",
-            "snake_heads/snake_sprites_29.png",
-            "snake_heads/snake_sprites_30.png"
-        ),
-        collection(typed)
-    )]
-    pub snake_heads: Vec<Handle<Image>>,
 }
