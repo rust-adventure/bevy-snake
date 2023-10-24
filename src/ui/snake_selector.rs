@@ -97,11 +97,14 @@ pub fn spawn_snake_selector(
     parent
         .spawn(NodeBundle {
             style: Style {
-                flex_wrap: FlexWrap::Wrap,
-                width: Val::Percent(100.0),
+                display: Display::Grid,
+                grid_template_columns: vec![
+                    RepeatedGridTrack::flex(6, 1.),
+                ],
+                row_gap: Val::Px(3.),
+                column_gap: Val::Px(3.),
+                width: Val::Percent(100.),
                 height: Val::Auto,
-                justify_content:
-                    JustifyContent::SpaceBetween,
                 ..default()
             },
             ..default()
@@ -116,7 +119,19 @@ pub fn spawn_snake_selector(
             {
                 parent
                     .spawn((
-                        ButtonBundle::default(),
+                        ButtonBundle {
+                            background_color: Color::NONE
+                                .into(),
+                            style: Style {
+                                display: Display::Flex,
+                                align_items:
+                                    AlignItems::Center,
+                                justify_self:
+                                    JustifySelf::Center,
+                                ..default()
+                            },
+                            ..default()
+                        },
                         SnakeHead(i),
                     ))
                     .with_children(|parent| {
@@ -124,9 +139,6 @@ pub fn spawn_snake_selector(
                             style: Style {
                                 width: Val::Px(50.0),
                                 height: Val::Px(50.0),
-                                margin: UiRect::all(
-                                    Val::Px(3.0),
-                                ),
                                 ..default()
                             },
                             texture_atlas: images
