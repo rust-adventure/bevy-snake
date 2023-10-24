@@ -3,18 +3,17 @@ use crate::{
     settings::{AudioSettings, GameSettings},
 };
 use bevy::prelude::*;
-use bevy_kira_audio::{Audio, AudioControl};
 
 #[derive(Component)]
 pub struct SnakeHead(usize);
 
 pub fn snake_selector_interaction(
+    mut commands: Commands,
     mut settings: ResMut<GameSettings>,
     mut interaction_query: Query<
         (&Interaction, &SnakeHead),
         (Changed<Interaction>, With<Button>),
     >,
-    audio: Res<Audio>,
     sounds: Res<AudioAssets>,
 ) {
     for (interaction, snake_head) in &mut interaction_query
@@ -22,7 +21,10 @@ pub fn snake_selector_interaction(
         match *interaction {
             Interaction::Pressed => {
                 if settings.audio == AudioSettings::ON {
-                    audio.play(sounds.apple.clone());
+                    commands.spawn(AudioBundle {
+                        source: sounds.apple.clone(),
+                        ..default()
+                    });
                 }
                 settings.snake_index = snake_head.0;
             }

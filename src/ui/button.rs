@@ -5,7 +5,6 @@ use crate::{
     GameState,
 };
 use bevy::{app::AppExit, prelude::*};
-use bevy_kira_audio::{Audio, AudioControl};
 
 const NORMAL_BUTTON: Color = Color::Hsla {
     hue: 0.0,
@@ -30,6 +29,7 @@ const PRESSED_BUTTON: Color = Color::Hsla {
 pub struct TextButton;
 
 pub fn text_button_system(
+    mut commands: Commands,
     mut interaction_query: Query<
         (
             &Interaction,
@@ -42,7 +42,6 @@ pub fn text_button_system(
     mut exit: EventWriter<AppExit>,
     mut menu_page: ResMut<MenuPage>,
     settings: Res<GameSettings>,
-    audio: Res<Audio>,
     sounds: Res<AudioAssets>,
     mut next_state: ResMut<NextState<GameState>>,
 ) {
@@ -53,7 +52,10 @@ pub fn text_button_system(
         match *interaction {
             Interaction::Pressed => {
                 if settings.audio == AudioSettings::ON {
-                    audio.play(sounds.apple.clone());
+                    commands.spawn(AudioBundle {
+                        source: sounds.apple.clone(),
+                        ..default()
+                    });
                 }
                 *color = PRESSED_BUTTON.into();
                 match text.sections[0].value.as_str() {
@@ -80,7 +82,10 @@ pub fn text_button_system(
             }
             Interaction::Hovered => {
                 if settings.audio == AudioSettings::ON {
-                    audio.play(sounds.menu_click.clone());
+                    commands.spawn(AudioBundle {
+                        source: sounds.menu_click.clone(),
+                        ..default()
+                    });
                 }
                 *color = HOVERED_BUTTON.into();
             }

@@ -8,7 +8,6 @@ use crate::{
     GameState,
 };
 use bevy::prelude::*;
-use bevy_kira_audio::{Audio, AudioControl};
 mod button;
 mod snake_selector;
 
@@ -17,7 +16,10 @@ pub struct UiPlugin;
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.insert_resource(MenuPage::Main)
-            .add_systems(PostStartup, game_ui)
+            .add_systems(
+                PostStartup,
+                (pause_ui, playing_ui),
+            )
             .add_systems(Update, button::text_button_system)
             .add_systems(
                 OnEnter(GameState::Menu),
@@ -79,6 +81,7 @@ fn change_menu(
 }
 
 fn audio_state(
+    mut commands: Commands,
     mut interaction_query: Query<
         (&Interaction, &mut UiImage),
         (
@@ -89,14 +92,16 @@ fn audio_state(
     >,
     images: Res<ImageAssets>,
     mut settings: ResMut<GameSettings>,
-    audio: Res<Audio>,
     sounds: Res<AudioAssets>,
 ) {
     for (interaction, mut image) in &mut interaction_query {
         match *interaction {
             Interaction::Pressed => {
                 if settings.audio == AudioSettings::ON {
-                    audio.play(sounds.apple.clone());
+                    commands.spawn(AudioBundle {
+                        source: sounds.apple.clone(),
+                        ..default()
+                    });
                 }
                 settings.audio = match settings.audio {
                     AudioSettings::ON => AudioSettings::OFF,
@@ -120,7 +125,7 @@ fn audio_state(
 #[derive(Component)]
 struct AudioSettingsCheckbox;
 
-pub fn game_ui(
+pub fn pause_ui(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     // settings: Res<GameSettings>,
@@ -293,4 +298,35 @@ pub fn game_ui(
                     );
                 });
         });
+}
+
+pub fn playing_ui(// mut commands: Commands,
+    // asset_server: Res<AssetServer>,
+    // score: Res<Score>,
+    // high_score: Res<HighScore>,
+    // images: Res<ImageAssets>,
+    // atlases: Res<Assets<TextureAtlas>>,
+) {
+    // commands.spawn((
+    //     NodeBundle {
+    //         background_color: BackgroundColor(
+    //             Color::Hsla {
+    //                 hue: 0.0,
+    //                 saturation: 0.0,
+    //                 lightness: 100.0,
+    //                 alpha: 0.2,
+    //             },
+    //         ),
+
+    //         style: Style {
+    //             height: Val::Percent(100.),
+    //             width: Val::Percent(100.),
+    //             justify_content: JustifyContent::Center,
+    //             position_type: PositionType::Absolute,
+    //             align_items: AlignItems::Center,
+    //             ..default()
+    //         },
+    //         ..default()
+    //     },
+    // ));
 }

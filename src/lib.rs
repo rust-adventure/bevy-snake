@@ -1,6 +1,5 @@
 use assets::AudioAssets;
 use bevy::prelude::*;
-use bevy_kira_audio::{Audio, AudioControl};
 use board::{Board, Position, SpawnSnakeSegment};
 use controls::Direction::*;
 use food::{Food, NewFoodEvent};
@@ -42,7 +41,6 @@ pub fn tick(
     query_food: Query<(Entity, &Position), With<Food>>,
     mut food_events: EventWriter<NewFoodEvent>,
     query_board: Query<&Board>,
-    audio: Res<Audio>,
     sounds: Res<AudioAssets>,
     settings: Res<GameSettings>,
     mut score: ResMut<Score>,
@@ -104,7 +102,10 @@ pub fn tick(
         | Some(GameOverReason::Win) => {
             next_state.set(GameState::Menu);
             if settings.audio == AudioSettings::ON {
-                audio.play(sounds.gameover.clone());
+                commands.spawn(AudioBundle {
+                    source: sounds.gameover.clone(),
+                    ..default()
+                });
             }
         }
         None => {
@@ -128,7 +129,10 @@ pub fn tick(
                     food_events.send(NewFoodEvent);
                     score.score += 1;
                     if settings.audio == AudioSettings::ON {
-                        audio.play(sounds.apple.clone());
+                        commands.spawn(AudioBundle {
+                            source: sounds.apple.clone(),
+                            ..default()
+                        });
                     }
                 }
                 None => {

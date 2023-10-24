@@ -13,11 +13,11 @@ impl Plugin for AssetsPlugin {
 #[derive(AssetCollection, Resource)]
 pub struct AudioAssets {
     #[asset(path = "gameover.ogg")]
-    pub gameover: Handle<bevy_kira_audio::AudioSource>,
+    pub gameover: Handle<AudioSource>,
     #[asset(path = "apple.ogg")]
-    pub apple: Handle<bevy_kira_audio::AudioSource>,
+    pub apple: Handle<AudioSource>,
     #[asset(path = "menu_click.ogg")]
-    pub menu_click: Handle<bevy_kira_audio::AudioSource>,
+    pub menu_click: Handle<AudioSource>,
 }
 
 #[derive(AssetCollection, Resource)]

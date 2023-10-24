@@ -1,7 +1,6 @@
 use std::time::Duration;
 
 use bevy::prelude::*;
-use bevy_kira_audio::AudioPlugin;
 use snake::{
     assets::AssetsPlugin,
     board::spawn_board,
@@ -34,7 +33,6 @@ fn main() {
             tick.run_if(in_state(GameState::Playing)),
         )
         .add_plugins((
-            AudioPlugin,
             SettingsPlugin,
             ControlsPlugin,
             FoodPlugin,
