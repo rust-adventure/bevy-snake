@@ -1,34 +1,28 @@
-use self::snake_selector::{
-    snake_selector_interaction, update_current_snake,
-};
 use crate::{
     assets::{AudioAssets, FontAssets, ImageAssets},
-    scoring::{HighScore, Score},
     settings::{AudioSettings, GameSettings},
     GameState,
 };
 use bevy::prelude::*;
+
 mod button;
 mod snake_selector;
+use self::snake_selector::{
+    snake_selector_interaction, update_current_snake,
+};
 
 pub struct UiPlugin;
 
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.insert_resource(MenuPage::Main)
-            .add_systems(
-                PostStartup,
-                (pause_ui, playing_ui),
-            )
+            .add_systems(PostStartup, pause_ui)
             .add_systems(
                 OnEnter(GameState::Menu),
                 show_menu,
             )
             .add_systems(OnExit(GameState::Menu), hide_menu)
-            .add_systems(
-                Update,
-                (button::text_button_system, scoreboard),
-            )
+            .add_systems(Update, button::text_button_system)
             .add_systems(
                 Update,
                 (
@@ -167,8 +161,8 @@ pub fn pause_ui(
                             },
                         ),
                         style: Style {
-                            width:     Val::Px(360.0),
-                            height:     Val::Px(500.0),
+                            width: Val::Px(360.0),
+                            height: Val::Px(500.0),
                             flex_direction:
                                 FlexDirection::Column,
                             justify_content:
@@ -215,8 +209,8 @@ pub fn pause_ui(
                             },
                         ),
                         style: Style {
-                            width:     Val::Px(360.0),
-                            height:     Val::Px(500.0),
+                            width: Val::Px(360.0),
+                            height: Val::Px(500.0),
                             flex_direction:
                                 FlexDirection::Column,
                             justify_content:
@@ -239,8 +233,8 @@ pub fn pause_ui(
                     parent
                         .spawn(NodeBundle {
                             style: Style {
-                                width:     Val::Auto,
-                                height:     Val::Px(25.0),
+                                width: Val::Auto,
+                                height: Val::Px(25.0),
                                 ..default()
                             },
                             ..default()
@@ -249,8 +243,8 @@ pub fn pause_ui(
                             parent.spawn((
                                 ButtonBundle {
                                     style: Style {
-                                        width:     Val::Px(25.0),
-                                        height:     Val::Px(25.0),
+                                        width: Val::Px(25.0),
+                                        height: Val::Px(25.0),
                                         margin:
                                             UiRect::right(
                                                 Val::Px(
@@ -274,9 +268,7 @@ pub fn pause_ui(
                                     TextStyle {
                                         font:fonts.roboto.clone(),
                                         font_size: 25.0,
-                                        color: Color::rgb(
-                                            0.0, 0.0, 0.0,
-                                        ),
+                                        color: Color::BLACK,
                                     },
                                 ),
                             );
@@ -291,65 +283,4 @@ pub fn pause_ui(
                     );
                 });
         });
-}
-
-#[derive(Component)]
-pub struct ScoreDisplay;
-
-#[derive(Component)]
-pub struct HighScoreDisplay;
-
-fn scoreboard(
-    score: Res<Score>,
-    high_score: Res<HighScore>,
-    mut query_scores: Query<
-        &mut Text,
-        (
-            With<ScoreDisplay>,
-            Without<HighScoreDisplay>,
-        ),
-    >,
-    mut query_high_scores: Query<
-        &mut Text,
-        (
-            With<HighScoreDisplay>,
-            Without<ScoreDisplay>,
-        ),
-    >,
-    timer: ResMut<crate::scoring::Timer>,
-) {
-    let mut text = query_scores.single_mut();
-    text.sections[1].value = score.score.to_string();
-
-    let elapsed = timer
-        .runtime
-        .map(|duration| duration.as_secs())
-        .or(timer
-            .start
-            .map(|start| start.elapsed().as_secs()))
-        .unwrap_or(0);
-    text.sections[4].value = elapsed.to_string();
-
-    let mut text = query_high_scores.single_mut();
-    text.sections[1].value = high_score.score.to_string();
-    text.sections[4].value =
-        high_score.time.as_secs().to_string();
-}
-
-pub fn playing_ui(
-    mut commands: Commands,
-    score: Res<Score>,
-    high_score: Res<HighScore>,
-    fonts: Res<FontAssets>,
-) {
-    let alfa_style = TextStyle {
-        font: fonts.alfa_slab_one_regular.clone(),
-        font_size: 25.0,
-        color: Color::BLACK,
-    };
-    let roboto_style = TextStyle {
-        font: fonts.roboto.clone(),
-        font_size: 30.0,
-        color: Color::BLACK,
-    };
 }

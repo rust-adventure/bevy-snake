@@ -1,8 +1,15 @@
-use crate::GameState;
-use bevy::prelude::{
-    App, OnEnter, OnExit, Plugin, Res, ResMut, Resource,
+use crate::{assets::FontAssets, board::Board, GameState};
+use bevy::{
+    prelude::{
+        App, OnEnter, OnExit, Plugin, PostStartup, Res,
+        ResMut, Resource, Update,
+    },
+    sprite::Anchor,
 };
 use std::time::{Duration, Instant};
+
+mod display;
+use display::update_score_displays;
 
 pub struct ScorePlugin;
 
@@ -12,12 +19,20 @@ impl Plugin for ScorePlugin {
             .init_resource::<Score>()
             .init_resource::<HighScore>()
             .add_systems(
+                PostStartup,
+                display::scorekeeping_ui,
+            )
+            .add_systems(
                 OnEnter(GameState::Playing),
                 start_timer,
             )
             .add_systems(
                 OnExit(GameState::Playing),
                 close_timer,
+            )
+            .add_systems(
+                Update,
+                update_score_displays, // .run_if(in_state(GameState::Playing)),
             );
     }
 }

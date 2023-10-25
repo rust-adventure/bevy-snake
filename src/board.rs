@@ -1,22 +1,15 @@
-use bevy::{
-    ecs::system::Command, prelude::*, sprite::Anchor,
-};
+use bevy::{ecs::system::Command, prelude::*};
 use itertools::Itertools;
 use rand::{
     distributions::WeightedIndex, prelude::Distribution,
 };
 
 use crate::{
-    assets::{FontAssets, ImageAssets},
-    colors::COLORS,
-    food::Food,
-    scoring::{HighScore, Score},
-    ui::{HighScoreDisplay, ScoreDisplay},
+    assets::ImageAssets, colors::COLORS, food::Food,
 };
 
 const TILE_SIZE: f32 = 30.0;
 const TILE_SPACER: f32 = 0.0;
-const OFFSET_TEXT_FROM_BOARD: f32 = 15.0;
 
 #[derive(Component)]
 pub struct Board {
@@ -41,6 +34,12 @@ impl Board {
             + f32::from(pos) * TILE_SIZE
             + f32::from(pos + 1) * TILE_SPACER
     }
+    pub fn low_edge(&self) -> f32 {
+        -self.physical_size / 2.0
+    }
+    pub fn high_edge(&self) -> f32 {
+        self.physical_size / 2.0
+    }
 }
 
 #[derive(
@@ -54,18 +53,12 @@ pub struct Position {
 pub fn spawn_board(
     mut commands: Commands,
     images: Res<ImageAssets>,
-    fonts: Res<FontAssets>,
-    score: Res<Score>,
-    high_score: Res<HighScore>,
 ) {
     let board = Board::new(20);
 
     let mut rng = rand::thread_rng();
     let weights = vec![3, 3, 1];
     let dist = WeightedIndex::new(weights).unwrap();
-
-    let zero = board.cell_position_to_physical(0);
-    let max = board.cell_position_to_physical(board.size);
 
     commands
         .spawn(SpriteBundle {
@@ -101,101 +94,6 @@ pub fn spawn_board(
             }
         })
         .insert(board);
-
-    // spawn scoring
-    let alfa_style = TextStyle {
-        font: fonts.alfa_slab_one_regular.clone(),
-        font_size: 25.0,
-        color: Color::BLACK,
-    };
-    let roboto_style = TextStyle {
-        font: fonts.roboto.clone(),
-        font_size: 30.0,
-        color: Color::BLACK,
-    };
-
-    commands.spawn((
-        Text2dBundle {
-            text: Text::from_sections(vec![
-                TextSection {
-                    value: "Current Score\n".to_string(),
-                    style: alfa_style.clone(),
-                },
-                TextSection {
-                    value: "0".to_string(),
-                    style: roboto_style.clone(),
-                },
-                TextSection {
-                    value: " apples".to_string(),
-                    style: roboto_style.clone(),
-                },
-                TextSection {
-                    value: "\nTime\n".to_string(),
-                    style: alfa_style.clone(),
-                },
-                TextSection {
-                    value: "0".to_string(),
-                    style: roboto_style.clone(),
-                },
-                TextSection {
-                    value: " seconds".to_string(),
-                    style: roboto_style.clone(),
-                },
-            ])
-            .with_alignment(TextAlignment::Right),
-            transform: Transform::from_xyz(
-                (zero - 0.5 * TILE_SIZE)
-                    - OFFSET_TEXT_FROM_BOARD,
-                max - 0.5 * TILE_SIZE,
-                1.0,
-            ),
-            text_anchor: Anchor::TopRight,
-            ..default()
-        },
-        ScoreDisplay,
-    ));
-    commands.spawn((
-        Text2dBundle {
-            text: Text::from_sections(vec![
-                TextSection {
-                    value: "High Score\n".to_string(),
-                    style: alfa_style.clone(),
-                },
-                TextSection {
-                    value: "".to_string(),
-                    style: roboto_style.clone(),
-                },
-                TextSection {
-                    value: " apples".to_string(),
-                    style: roboto_style.clone(),
-                },
-                TextSection {
-                    value: "\nBest Time\n".to_string(),
-                    style: alfa_style.clone(),
-                },
-                TextSection {
-                    value: high_score
-                        .time
-                        .as_secs()
-                        .to_string(),
-                    style: roboto_style.clone(),
-                },
-                TextSection {
-                    value: " seconds".to_string(),
-                    style: roboto_style.clone(),
-                },
-            ]),
-            transform: Transform::from_xyz(
-                (max - 0.5 * TILE_SIZE)
-                    + OFFSET_TEXT_FROM_BOARD,
-                max - 0.5 * TILE_SIZE,
-                1.0,
-            ),
-            text_anchor: Anchor::TopLeft,
-            ..default()
-        },
-        HighScoreDisplay,
-    ));
 }
 
 pub struct SpawnSnakeSegment {
