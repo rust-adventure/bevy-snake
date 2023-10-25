@@ -33,12 +33,6 @@ pub struct AudioAssets {
 pub struct ImageAssets {
     #[asset(path = "apple.png")]
     pub apple: Handle<Image>,
-    #[asset(path = "green_panel.png")]
-    pub green_panel: Handle<Image>,
-    #[asset(path = "blue_button09.png")]
-    pub blue_button09: Handle<Image>,
-    #[asset(path = "blue_button10.png")]
-    pub blue_button10: Handle<Image>,
     #[asset(path = "grey_box.png")]
     pub box_unchecked: Handle<Image>,
     #[asset(path = "green_boxCheckmark.png")]

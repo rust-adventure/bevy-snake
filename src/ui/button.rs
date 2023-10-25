@@ -1,6 +1,6 @@
 use super::MenuPage;
 use crate::{
-    assets::{AudioAssets, FontAssets, ImageAssets},
+    assets::{AudioAssets, FontAssets},
     settings::{AudioSettings, GameSettings},
     GameState,
 };
