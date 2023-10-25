@@ -30,10 +30,7 @@ impl Plugin for ScorePlugin {
                 OnExit(GameState::Playing),
                 close_timer,
             )
-            .add_systems(
-                Update,
-                update_score_displays, // .run_if(in_state(GameState::Playing)),
-            );
+            .add_systems(Update, update_score_displays);
     }
 }
 
