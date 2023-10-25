@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use itertools::Itertools;
 use rand::prelude::SliceRandom;
 
 use crate::{
@@ -33,12 +32,8 @@ pub fn food_event_listener(
 ) {
     let board = query_board.single();
 
-    let possible_food_locations = (0..board.size)
-        .cartesian_product(0..board.size)
-        .map(|point| Position {
-            x: point.0,
-            y: point.1,
-        })
+    let possible_food_locations = board
+        .tiles()
         .filter(|pos| !snake.segments.contains(pos))
         .collect::<Vec<Position>>();
 

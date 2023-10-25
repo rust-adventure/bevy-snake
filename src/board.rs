@@ -40,6 +40,11 @@ impl Board {
     pub fn high_edge(&self) -> f32 {
         self.physical_size / 2.0
     }
+    pub fn tiles(&self) -> impl Iterator<Item = Position> {
+        (0..self.size)
+            .cartesian_product(0..self.size)
+            .map(|(x, y)| Position { x, y })
+    }
 }
 
 #[derive(
@@ -72,9 +77,7 @@ pub fn spawn_board(
             ..Default::default()
         })
         .with_children(|builder| {
-            for (x, y) in (0..board.size)
-                .cartesian_product(0..board.size)
-            {
+            for pos in board.tiles() {
                 builder.spawn(SpriteSheetBundle {
                     texture_atlas: images.grass.clone(),
                     sprite: TextureAtlasSprite {
@@ -85,8 +88,12 @@ pub fn spawn_board(
                         ..TextureAtlasSprite::default()
                     },
                     transform: Transform::from_xyz(
-                        board.cell_position_to_physical(x),
-                        board.cell_position_to_physical(y),
+                        board.cell_position_to_physical(
+                            pos.x,
+                        ),
+                        board.cell_position_to_physical(
+                            pos.y,
+                        ),
                         1.0,
                     ),
                     ..Default::default()
