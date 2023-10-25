@@ -65,12 +65,9 @@ pub fn render_snake_segments(
         .iter_mut()
         .find(|pos| pos.0 == &snake.segments[0]);
 
-    match head {
-        Some((pos, mut sprite, mut transform)) => {
-            let rotation = match detect_side(
-                pos,
-                &snake.segments[1],
-            ) {
+    if let Some((pos, mut sprite, mut transform)) = head {
+        let rotation =
+            match detect_side(pos, &snake.segments[1]) {
                 Direction::Up => Quat::from_rotation_z(0.0),
                 Direction::Down => Quat::from_rotation_z(
                     std::f32::consts::PI,
@@ -82,38 +79,33 @@ pub fn render_snake_segments(
                     -std::f32::consts::FRAC_PI_2,
                 ),
             };
-            sprite.index = snake_texture_index;
-            transform.rotation = rotation;
-        }
-        None => {}
+        sprite.index = snake_texture_index;
+        transform.rotation = rotation;
     }
 
     let tail = positions.iter_mut().find(|pos| {
         pos.0 == &snake.segments[snake.segments.len() - 1]
     });
 
-    match tail {
-        Some((pos, mut sprite, mut transform)) => {
-            let rotation = match detect_side(
-                pos,
-                &snake.segments[snake.segments.len() - 2],
-            ) {
-                Direction::Up => Quat::from_rotation_z(0.0),
-                Direction::Down => Quat::from_rotation_z(
-                    std::f32::consts::PI,
-                ),
-                Direction::Left => Quat::from_rotation_z(
-                    std::f32::consts::FRAC_PI_2,
-                ),
-                Direction::Right => Quat::from_rotation_z(
-                    -std::f32::consts::FRAC_PI_2,
-                ),
-            };
+    if let Some((pos, mut sprite, mut transform)) = tail {
+        let rotation = match detect_side(
+            pos,
+            &snake.segments[snake.segments.len() - 2],
+        ) {
+            Direction::Up => Quat::from_rotation_z(0.0),
+            Direction::Down => {
+                Quat::from_rotation_z(std::f32::consts::PI)
+            }
+            Direction::Left => Quat::from_rotation_z(
+                std::f32::consts::FRAC_PI_2,
+            ),
+            Direction::Right => Quat::from_rotation_z(
+                -std::f32::consts::FRAC_PI_2,
+            ),
+        };
 
-            sprite.index = snake_texture_index + 3;
-            transform.rotation = rotation;
-        }
-        None => {}
+        sprite.index = snake_texture_index + 3;
+        transform.rotation = rotation;
     }
 
     for (front, origin, back) in
@@ -171,12 +163,11 @@ pub fn render_snake_segments(
             .iter_mut()
             .find(|pos| pos.0 == origin);
 
-        match current_position {
-            Some((_, mut sprite, mut transform)) => {
-                sprite.index = image.0;
-                transform.rotation = image.1;
-            }
-            None => {}
+        if let Some((_, mut sprite, mut transform)) =
+            current_position
+        {
+            sprite.index = image.0;
+            transform.rotation = image.1;
         }
     }
 }

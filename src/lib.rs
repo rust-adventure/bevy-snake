@@ -48,7 +48,7 @@ pub fn tick(
 ) {
     let board = query_board.single();
 
-    let mut next_position = snake.segments[0].clone();
+    let mut next_position = snake.segments[0];
     let hit_wall = match *input {
         Up if next_position.y == board.size - 1 => {
             Some(GameOverReason::HitWall)

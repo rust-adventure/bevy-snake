@@ -104,7 +104,7 @@ impl Command for SpawnSnakeSegment {
     fn apply(self, world: &mut World) {
         let board = world
             .query::<&Board>()
-            .iter(&world)
+            .iter(world)
             .next()
             .unwrap();
         let x = board
@@ -144,7 +144,7 @@ impl Command for SpawnApple {
     fn apply(self, world: &mut World) {
         let board = world
             .query::<&Board>()
-            .iter(&world)
+            .iter(world)
             .next()
             .unwrap();
         let x = board

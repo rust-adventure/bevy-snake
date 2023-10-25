@@ -15,20 +15,15 @@ impl Plugin for ControlsPlugin {
     }
 }
 
-#[derive(Resource)]
+#[derive(Resource, Default)]
 pub enum Direction {
     Up,
     Down,
     Left,
+    #[default]
     Right,
 }
 use Direction::*;
-
-impl Default for Direction {
-    fn default() -> Self {
-        Right
-    }
-}
 
 fn user_input(
     input: Res<Input<KeyCode>>,

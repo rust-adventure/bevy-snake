@@ -52,19 +52,12 @@ pub struct HighScore {
     pub time: Duration,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Resource)]
+#[derive(
+    Default, Debug, Clone, PartialEq, Eq, Resource,
+)]
 pub struct Timer {
     pub start: Option<Instant>,
     pub runtime: Option<Duration>,
-}
-
-impl Default for Timer {
-    fn default() -> Self {
-        Timer {
-            start: None,
-            runtime: None,
-        }
-    }
 }
 
 fn start_timer(mut timer: ResMut<Timer>) {

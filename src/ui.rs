@@ -88,29 +88,25 @@ fn audio_state(
     sounds: Res<AudioAssets>,
 ) {
     for (interaction, mut image) in &mut interaction_query {
-        match *interaction {
-            Interaction::Pressed => {
-                if settings.audio == AudioSettings::ON {
-                    commands.spawn(AudioBundle {
-                        source: sounds.apple.clone(),
-                        ..default()
-                    });
-                }
-                settings.audio = match settings.audio {
-                    AudioSettings::ON => AudioSettings::OFF,
-                    AudioSettings::OFF => AudioSettings::ON,
-                };
-                *image =
-                    UiImage::new(match settings.audio {
-                        AudioSettings::ON => {
-                            images.box_checked.clone()
-                        }
-                        AudioSettings::OFF => {
-                            images.box_unchecked.clone()
-                        }
-                    });
+        if interaction == &Interaction::Pressed {
+            if settings.audio == AudioSettings::ON {
+                commands.spawn(AudioBundle {
+                    source: sounds.apple.clone(),
+                    ..default()
+                });
             }
-            _ => {}
+            settings.audio = match settings.audio {
+                AudioSettings::ON => AudioSettings::OFF,
+                AudioSettings::OFF => AudioSettings::ON,
+            };
+            *image = UiImage::new(match settings.audio {
+                AudioSettings::ON => {
+                    images.box_checked.clone()
+                }
+                AudioSettings::OFF => {
+                    images.box_unchecked.clone()
+                }
+            });
         }
     }
 }
