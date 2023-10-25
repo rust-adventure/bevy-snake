@@ -1,5 +1,6 @@
 use crate::{
     assets::{AudioAssets, FontAssets, ImageAssets},
+    colors::COLORS,
     settings::{AudioSettings, GameSettings},
 };
 use bevy::prelude::*;
@@ -91,7 +92,7 @@ pub fn spawn_snake_selector(
                 TextStyle {
                     font: fonts.roboto.clone(),
                     font_size: 25.0,
-                    color: Color::BLACK,
+                    color: COLORS.text,
                 },
             ));
         });

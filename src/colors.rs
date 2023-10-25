@@ -6,6 +6,7 @@ pub struct Colors {
     pub tile_placeholder_dark: Color,
     pub snake: Color,
     pub food: Color,
+    pub text: Color,
 }
 pub const COLORS: Colors = Colors {
     board: Color::rgb(0.42, 0.63, 0.07),
@@ -13,4 +14,5 @@ pub const COLORS: Colors = Colors {
     tile_placeholder_dark: Color::rgb(0.57, 0.78, 0.22),
     snake: Color::WHITE,
     food: Color::RED,
+    text: Color::BLACK,
 };

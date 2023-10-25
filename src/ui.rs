@@ -1,5 +1,6 @@
 use crate::{
     assets::{AudioAssets, FontAssets, ImageAssets},
+    colors::COLORS,
     settings::{AudioSettings, GameSettings},
     GameState,
 };
@@ -7,8 +8,11 @@ use bevy::prelude::*;
 
 mod button;
 mod snake_selector;
-use self::snake_selector::{
-    snake_selector_interaction, update_current_snake,
+use self::{
+    button::SpawnButton,
+    snake_selector::{
+        snake_selector_interaction, update_current_snake,
+    },
 };
 
 pub struct UiPlugin;
@@ -176,21 +180,20 @@ pub fn pause_ui(
                     MenuPage::Main,
                 ))
                 .with_children(|parent| {
-                    button::spawn_button(
-                        parent,
-                        &fonts,
-                        "New Game",
-                    );
-                    button::spawn_button(
-                        parent,
-                        &fonts,
-                        "Settings",
-                    );
-                    button::spawn_button(
-                        parent,
-                        &fonts,
-                        "Exit",
-                    );
+                    let entity = parent.parent_entity();
+                    parent.add_command(SpawnButton{
+                        parent: entity,
+                        text: "New Game"
+                    });
+                    parent.add_command(SpawnButton{
+                        parent: entity,
+                        text: "Settings"
+                    });
+                    parent.add_command(SpawnButton{
+                        parent: entity,
+                        text: "Exit"
+                    });
+                  
                 });
             parent
                 .spawn((
@@ -221,11 +224,11 @@ pub fn pause_ui(
                     MenuPage::Settings,
                 ))
                 .with_children(|parent| {
-                    button::spawn_button(
-                        parent,
-                        &fonts,
-                        "Back",
-                    );
+                    let entity = parent.parent_entity();
+                    parent.add_command(SpawnButton{
+                        parent: entity,
+                        text: "Back"
+                    });
                     parent
                         .spawn(NodeBundle {
                             style: Style {
@@ -264,7 +267,7 @@ pub fn pause_ui(
                                     TextStyle {
                                         font:fonts.roboto.clone(),
                                         font_size: 25.0,
-                                        color: Color::BLACK,
+                                        color: COLORS.text,
                                     },
                                 ),
                             );

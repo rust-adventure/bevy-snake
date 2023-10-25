@@ -1,10 +1,12 @@
 use super::MenuPage;
 use crate::{
-    assets::{AudioAssets, FontAssets},
+    assets::{AudioAssets, FontAssets, ImageAssets},
     settings::{AudioSettings, GameSettings},
     GameState,
 };
-use bevy::{app::AppExit, prelude::*};
+use bevy::{
+    app::AppExit, ecs::system::Command, prelude::*,
+};
 
 const NORMAL_BUTTON: Color = Color::Hsla {
     hue: 0.0,
@@ -96,39 +98,50 @@ pub fn text_button_system(
     }
 }
 
-pub fn spawn_button(
-    parent: &mut ChildBuilder,
-    fonts: &Res<FontAssets>,
-    text: &str,
-) {
-    parent
-        .spawn((
-            ButtonBundle {
-                style: Style {
-                    width: Val::Percent(100.0),
-                    height: Val::Px(65.0),
+pub struct SpawnButton<T: Into<String>> {
+    pub text: T,
+    pub parent: Entity,
+}
 
-                    // horizontally center child text
-                    justify_content: JustifyContent::Center,
-                    // vertically center child text
-                    align_items: AlignItems::Center,
+impl<T: Into<String> + Send + 'static> Command
+    for SpawnButton<T>
+{
+    fn apply(self, world: &mut World) {
+        let font = world
+            .get_resource::<FontAssets>()
+            .unwrap()
+            .alfa_slab_one_regular
+            .clone();
+
+        world
+            .spawn((
+                ButtonBundle {
+                    style: Style {
+                        width: Val::Percent(100.0),
+                        height: Val::Px(65.0),
+
+                        // horizontally center child text
+                        justify_content:
+                            JustifyContent::Center,
+                        // vertically center child text
+                        align_items: AlignItems::Center,
+                        ..default()
+                    },
+                    background_color: NORMAL_BUTTON.into(),
                     ..default()
                 },
-                background_color: NORMAL_BUTTON.into(),
-                ..default()
-            },
-            TextButton,
-        ))
-        .with_children(|parent| {
-            parent.spawn(TextBundle::from_section(
-                text,
-                TextStyle {
-                    font: fonts
-                        .alfa_slab_one_regular
-                        .clone(),
-                    font_size: 40.0,
-                    color: Color::rgb(0.9, 0.9, 0.9),
-                },
-            ));
-        });
+                TextButton,
+            ))
+            .set_parent(self.parent)
+            .with_children(|parent| {
+                parent.spawn(TextBundle::from_section(
+                    self.text,
+                    TextStyle {
+                        font,
+                        font_size: 40.0,
+                        color: Color::rgb(0.9, 0.9, 0.9),
+                    },
+                ));
+            });
+    }
 }
