@@ -6,8 +6,17 @@ pub struct AssetsPlugin;
 impl Plugin for AssetsPlugin {
     fn build(&self, app: &mut App) {
         app.init_collection::<ImageAssets>()
-            .init_collection::<AudioAssets>();
+            .init_collection::<AudioAssets>()
+            .init_collection::<FontAssets>();
     }
+}
+
+#[derive(AssetCollection, Resource)]
+pub struct FontAssets {
+    #[asset(path = "AlfaSlabOne-Regular.ttf")]
+    pub alfa_slab_one_regular: Handle<Font>,
+    #[asset(path = "roboto.ttf")]
+    pub roboto: Handle<Font>,
 }
 
 #[derive(AssetCollection, Resource)]

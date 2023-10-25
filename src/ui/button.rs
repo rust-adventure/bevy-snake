@@ -1,6 +1,6 @@
 use super::MenuPage;
 use crate::{
-    assets::AudioAssets,
+    assets::{AudioAssets, FontAssets},
     settings::{AudioSettings, GameSettings},
     GameState,
 };
@@ -98,7 +98,7 @@ pub fn text_button_system(
 
 pub fn spawn_button(
     parent: &mut ChildBuilder,
-    asset_server: &Res<AssetServer>,
+    fonts: &Res<FontAssets>,
     text: &str,
 ) {
     parent
@@ -123,8 +123,9 @@ pub fn spawn_button(
             parent.spawn(TextBundle::from_section(
                 text,
                 TextStyle {
-                    font: asset_server
-                        .load("AlfaSlabOne-Regular.ttf"),
+                    font: fonts
+                        .alfa_slab_one_regular
+                        .clone(),
                     font_size: 40.0,
                     color: Color::rgb(0.9, 0.9, 0.9),
                 },

@@ -2,7 +2,7 @@ use self::snake_selector::{
     snake_selector_interaction, update_current_snake,
 };
 use crate::{
-    assets::{AudioAssets, ImageAssets},
+    assets::{AudioAssets, FontAssets, ImageAssets},
     scoring::{HighScore, Score},
     settings::{AudioSettings, GameSettings},
     GameState,
@@ -20,16 +20,15 @@ impl Plugin for UiPlugin {
                 PostStartup,
                 (pause_ui, playing_ui),
             )
-            .add_systems(Update, button::text_button_system)
             .add_systems(
                 OnEnter(GameState::Menu),
                 show_menu,
             )
+            .add_systems(OnExit(GameState::Menu), hide_menu)
             .add_systems(
-                OnEnter(GameState::Playing),
-                hide_menu,
+                Update,
+                (button::text_button_system, scoreboard),
             )
-            .add_systems(Update, button::text_button_system)
             .add_systems(
                 Update,
                 (
@@ -127,12 +126,9 @@ struct AudioSettingsCheckbox;
 
 pub fn pause_ui(
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    // settings: Res<GameSettings>,
-    // score: Res<Score>,
-    // high_score: Res<HighScore>,
     images: Res<ImageAssets>,
     atlases: Res<Assets<TextureAtlas>>,
+    fonts: Res<FontAssets>,
 ) {
     commands
         .spawn((
@@ -192,17 +188,17 @@ pub fn pause_ui(
                 .with_children(|parent| {
                     button::spawn_button(
                         parent,
-                        &asset_server,
+                        &fonts,
                         "New Game",
                     );
                     button::spawn_button(
                         parent,
-                        &asset_server,
+                        &fonts,
                         "Settings",
                     );
                     button::spawn_button(
                         parent,
-                        &asset_server,
+                        &fonts,
                         "Exit",
                     );
                 });
@@ -237,7 +233,7 @@ pub fn pause_ui(
                 .with_children(|parent| {
                     button::spawn_button(
                         parent,
-                        &asset_server,
+                        &fonts,
                         "Back",
                     );
                     parent
@@ -276,10 +272,7 @@ pub fn pause_ui(
                                 TextBundle::from_section(
                                     "Play Audio",
                                     TextStyle {
-                                        font: asset_server
-                                            .load(
-                                            "roboto.ttf",
-                                        ),
+                                        font:fonts.roboto.clone(),
                                         font_size: 25.0,
                                         color: Color::rgb(
                                             0.0, 0.0, 0.0,
@@ -292,41 +285,205 @@ pub fn pause_ui(
                     snake_selector::spawn_snake_selector(
                         parent,
                         images,
-                        asset_server,
                         0,
-                        &atlases
+                        &atlases,
+                        &fonts,
                     );
                 });
         });
 }
 
-pub fn playing_ui(// mut commands: Commands,
-    // asset_server: Res<AssetServer>,
-    // score: Res<Score>,
-    // high_score: Res<HighScore>,
-    // images: Res<ImageAssets>,
-    // atlases: Res<Assets<TextureAtlas>>,
-) {
-    // commands.spawn((
-    //     NodeBundle {
-    //         background_color: BackgroundColor(
-    //             Color::Hsla {
-    //                 hue: 0.0,
-    //                 saturation: 0.0,
-    //                 lightness: 100.0,
-    //                 alpha: 0.2,
-    //             },
-    //         ),
+#[derive(Component)]
+struct ScoreDisplay;
 
-    //         style: Style {
-    //             height: Val::Percent(100.),
-    //             width: Val::Percent(100.),
-    //             justify_content: JustifyContent::Center,
-    //             position_type: PositionType::Absolute,
-    //             align_items: AlignItems::Center,
-    //             ..default()
-    //         },
-    //         ..default()
-    //     },
-    // ));
+#[derive(Component)]
+struct HighScoreDisplay;
+
+fn scoreboard(
+    score: Res<Score>,
+    high_score: Res<HighScore>,
+    mut query_scores: Query<
+        &mut Text,
+        (
+            With<ScoreDisplay>,
+            Without<HighScoreDisplay>,
+        ),
+    >,
+    mut query_high_scores: Query<
+        &mut Text,
+        (
+            With<HighScoreDisplay>,
+            Without<ScoreDisplay>,
+        ),
+    >,
+    timer: ResMut<crate::scoring::Timer>,
+) {
+    let mut text = query_scores.single_mut();
+    text.sections[1].value = score.score.to_string();
+
+    let elapsed = timer
+        .runtime
+        .map(|duration| duration.as_secs())
+        .or(timer
+            .start
+            .map(|start| start.elapsed().as_secs()))
+        .unwrap_or(0);
+    text.sections[4].value = elapsed.to_string();
+
+    let mut text = query_high_scores.single_mut();
+    text.sections[1].value = high_score.score.to_string();
+    text.sections[4].value =
+        high_score.time.as_secs().to_string();
+}
+
+pub fn playing_ui(
+    mut commands: Commands,
+    score: Res<Score>,
+    high_score: Res<HighScore>,
+    fonts: Res<FontAssets>,
+) {
+    let alfa_style = TextStyle {
+        font: fonts.alfa_slab_one_regular.clone(),
+        font_size: 25.0,
+        color: Color::BLACK,
+    };
+    let roboto_style = TextStyle {
+        font: fonts.roboto.clone(),
+        font_size: 30.0,
+        color: Color::BLACK,
+    };
+
+    commands
+        .spawn(NodeBundle {
+            style: Style {
+                height: Val::Percent(100.),
+                width: Val::Percent(100.),
+                position_type: PositionType::Absolute,
+                display: Display::Flex,
+                ..default()
+            },
+            ..default()
+        })
+        .with_children(|parent| {
+            parent
+                .spawn(NodeBundle {
+                    style: Style {
+                        flex_grow: 1.,
+                        justify_content: JustifyContent::FlexEnd,
+                        ..default()
+                    },
+                    ..default()
+                })
+                .with_children(|parent| {
+                    parent.spawn((
+                        TextBundle {
+                            background_color: Color::rgba(0.,0.,0.,0.4).into(),
+                            text: Text::from_sections(
+                                vec![
+                                    TextSection {
+                                        value: "Current Score\n"
+                                            .to_string(),
+                                        style: alfa_style
+                                            .clone(),
+                                    },
+                                    TextSection {
+                                        value: score.score
+                                            .to_string(),
+                                        style: roboto_style
+                                            .clone(),
+                                    },
+                                    TextSection {
+                                        value: " apples"
+                                            .to_string(),
+                                        style: roboto_style
+                                            .clone(),
+                                    },
+                                    TextSection {
+                                        value: "\nTime\n"
+                                            .to_string(),
+                                        style: alfa_style
+                                            .clone(),
+                                    },
+                                    TextSection {
+                                        value: "0".to_string(),
+                                        style: roboto_style
+                                            .clone(),
+                                    },
+                                    TextSection {
+                                        value: " seconds"
+                                            .to_string(),
+                                        style: roboto_style
+                                            .clone(),
+                                    },
+                                ],
+                            ).with_alignment(TextAlignment::Right),
+                            ..default()
+                        },
+                        ScoreDisplay,
+                    ));
+                });
+            parent.spawn(NodeBundle {
+                style: Style {
+                    width: Val::Px(600.),
+                    ..default()
+                },
+                ..default()
+            });
+            parent
+                .spawn(NodeBundle {                            background_color: Color::rgba(0.,0.,0.,0.4).into(),
+
+                    style: Style {
+                        flex_grow: 1.,
+                        ..default()
+                    },
+                    ..default()
+                })
+                .with_children(|parent| {
+                    parent.spawn((
+                        TextBundle {
+                            text: Text::from_sections(
+                                vec![
+                                    TextSection {
+                                        value: "High Score\n"
+                                            .to_string(),
+                                        style: alfa_style
+                                            .clone(),
+                                    },
+                                    TextSection {
+                                        value: ""
+                                            .to_string(),
+                                        style: roboto_style
+                                            .clone(),
+                                    },
+                                    TextSection {
+                                        value: " apples"
+                                            .to_string(),
+                                        style: roboto_style
+                                            .clone(),
+                                    },
+                                    TextSection {
+                                        value: "\nBest Time\n"
+                                            .to_string(),
+                                        style: alfa_style
+                                            .clone(),
+                                    },
+                                    TextSection {
+                                        value: high_score.time.as_secs().to_string(),
+                                        style: roboto_style
+                                            .clone(),
+                                    },
+                                    TextSection {
+                                        value: " seconds"
+                                            .to_string(),
+                                        style: roboto_style
+                                            .clone(),
+                                    },
+                                ],
+                            ),
+                            ..default()
+                        },
+                        HighScoreDisplay,
+                    ));
+                });
+        });
 }

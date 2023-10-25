@@ -1,5 +1,5 @@
 use crate::{
-    assets::{AudioAssets, ImageAssets},
+    assets::{AudioAssets, FontAssets, ImageAssets},
     settings::{AudioSettings, GameSettings},
 };
 use bevy::prelude::*;
@@ -52,9 +52,9 @@ pub fn update_current_snake(
 pub fn spawn_snake_selector(
     parent: &mut ChildBuilder,
     images: Res<ImageAssets>,
-    asset_server: Res<AssetServer>,
     current_snake_index: usize,
     atlases: &Res<Assets<TextureAtlas>>,
+    fonts: &Res<FontAssets>,
 ) {
     parent
         .spawn(NodeBundle {
@@ -89,9 +89,9 @@ pub fn spawn_snake_selector(
             parent.spawn(TextBundle::from_section(
                 "Current Snake",
                 TextStyle {
-                    font: asset_server.load("roboto.ttf"),
+                    font: fonts.roboto.clone(),
                     font_size: 25.0,
-                    color: Color::rgb(0.0, 0.0, 0.0),
+                    color: Color::BLACK,
                 },
             ));
         });
