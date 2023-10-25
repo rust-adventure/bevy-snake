@@ -42,7 +42,7 @@ pub fn food_event_listener(
         .filter(|pos| !snake.segments.contains(pos))
         .collect::<Vec<Position>>();
 
-    let num_food = events.iter().count();
+    let num_food = events.read().count();
 
     let mut rng = rand::thread_rng();
     for pos in possible_food_locations

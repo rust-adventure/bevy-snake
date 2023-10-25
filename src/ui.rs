@@ -294,10 +294,10 @@ pub fn pause_ui(
 }
 
 #[derive(Component)]
-struct ScoreDisplay;
+pub struct ScoreDisplay;
 
 #[derive(Component)]
-struct HighScoreDisplay;
+pub struct HighScoreDisplay;
 
 fn scoreboard(
     score: Res<Score>,
@@ -352,138 +352,4 @@ pub fn playing_ui(
         font_size: 30.0,
         color: Color::BLACK,
     };
-
-    commands
-        .spawn(NodeBundle {
-            style: Style {
-                height: Val::Percent(100.),
-                width: Val::Percent(100.),
-                position_type: PositionType::Absolute,
-                display: Display::Flex,
-                ..default()
-            },
-            ..default()
-        })
-        .with_children(|parent| {
-            parent
-                .spawn(NodeBundle {
-                    style: Style {
-                        flex_grow: 1.,
-                        justify_content: JustifyContent::FlexEnd,
-                        ..default()
-                    },
-                    ..default()
-                })
-                .with_children(|parent| {
-                    parent.spawn((
-                        TextBundle {
-                            background_color: Color::rgba(0.,0.,0.,0.4).into(),
-                            text: Text::from_sections(
-                                vec![
-                                    TextSection {
-                                        value: "Current Score\n"
-                                            .to_string(),
-                                        style: alfa_style
-                                            .clone(),
-                                    },
-                                    TextSection {
-                                        value: score.score
-                                            .to_string(),
-                                        style: roboto_style
-                                            .clone(),
-                                    },
-                                    TextSection {
-                                        value: " apples"
-                                            .to_string(),
-                                        style: roboto_style
-                                            .clone(),
-                                    },
-                                    TextSection {
-                                        value: "\nTime\n"
-                                            .to_string(),
-                                        style: alfa_style
-                                            .clone(),
-                                    },
-                                    TextSection {
-                                        value: "0".to_string(),
-                                        style: roboto_style
-                                            .clone(),
-                                    },
-                                    TextSection {
-                                        value: " seconds"
-                                            .to_string(),
-                                        style: roboto_style
-                                            .clone(),
-                                    },
-                                ],
-                            ).with_alignment(TextAlignment::Right),
-                            ..default()
-                        },
-                        ScoreDisplay,
-                    ));
-                });
-            parent.spawn(NodeBundle {
-                style: Style {
-                    width: Val::Px(600.),
-                    ..default()
-                },
-                ..default()
-            });
-            parent
-                .spawn(NodeBundle {                            background_color: Color::rgba(0.,0.,0.,0.4).into(),
-
-                    style: Style {
-                        flex_grow: 1.,
-                        ..default()
-                    },
-                    ..default()
-                })
-                .with_children(|parent| {
-                    parent.spawn((
-                        TextBundle {
-                            text: Text::from_sections(
-                                vec![
-                                    TextSection {
-                                        value: "High Score\n"
-                                            .to_string(),
-                                        style: alfa_style
-                                            .clone(),
-                                    },
-                                    TextSection {
-                                        value: ""
-                                            .to_string(),
-                                        style: roboto_style
-                                            .clone(),
-                                    },
-                                    TextSection {
-                                        value: " apples"
-                                            .to_string(),
-                                        style: roboto_style
-                                            .clone(),
-                                    },
-                                    TextSection {
-                                        value: "\nBest Time\n"
-                                            .to_string(),
-                                        style: alfa_style
-                                            .clone(),
-                                    },
-                                    TextSection {
-                                        value: high_score.time.as_secs().to_string(),
-                                        style: roboto_style
-                                            .clone(),
-                                    },
-                                    TextSection {
-                                        value: " seconds"
-                                            .to_string(),
-                                        style: roboto_style
-                                            .clone(),
-                                    },
-                                ],
-                            ),
-                            ..default()
-                        },
-                        HighScoreDisplay,
-                    ));
-                });
-        });
 }

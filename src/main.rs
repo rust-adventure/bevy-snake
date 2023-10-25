@@ -1,5 +1,3 @@
-use std::time::Duration;
-
 use bevy::prelude::*;
 use snake::{
     assets::AssetsPlugin,
@@ -22,12 +20,7 @@ fn main() {
         )))
         .add_plugins(DefaultPlugins)
         .add_state::<GameState>()
-        // 0.12 update unifies time
-        // .insert_resource(Time::<Fixed>::from_seconds(0.
-        // 1))
-        .insert_resource(FixedTime::new(
-            Duration::from_millis(100),
-        ))
+        .insert_resource(Time::<Fixed>::from_seconds(0.1))
         .add_systems(
             FixedUpdate,
             tick.run_if(in_state(GameState::Playing)),
@@ -41,7 +34,13 @@ fn main() {
         ))
         .init_resource::<Snake>()
         .add_plugins(ScorePlugin)
-        .add_systems(Startup, (setup, spawn_board))
+        .add_systems(
+            Startup,
+            (
+                setup,
+                spawn_board, /*spawn_scorekeeping*/
+            ),
+        )
         .add_systems(
             Update,
             render_snake_segments
