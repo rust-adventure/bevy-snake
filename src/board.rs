@@ -130,8 +130,8 @@ impl Command for SpawnSnakeSegment {
                 texture_atlas: snake,
                 sprite: TextureAtlasSprite {
                     index: 8,
-                    custom_size: Some(Vec2::new(
-                        TILE_SIZE, TILE_SIZE,
+                    custom_size: Some(Vec2::splat(
+                        TILE_SIZE,
                     )),
                     ..TextureAtlasSprite::default()
                 },
@@ -168,8 +168,8 @@ impl Command for SpawnApple {
         world.spawn((
             SpriteBundle {
                 sprite: Sprite {
-                    custom_size: Some(Vec2::new(
-                        TILE_SIZE, TILE_SIZE,
+                    custom_size: Some(Vec2::splat(
+                        TILE_SIZE,
                     )),
                     ..Sprite::default()
                 },

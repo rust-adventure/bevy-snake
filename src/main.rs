@@ -34,13 +34,7 @@ fn main() {
         ))
         .init_resource::<Snake>()
         .add_plugins(ScorePlugin)
-        .add_systems(
-            Startup,
-            (
-                setup,
-                spawn_board, /*spawn_scorekeeping*/
-            ),
-        )
+        .add_systems(Startup, (setup, spawn_board))
         .add_systems(
             Update,
             render_snake_segments

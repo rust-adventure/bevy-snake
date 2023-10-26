@@ -36,7 +36,6 @@ fn detect_side(
     origin: &Position,
     other: &Position,
 ) -> Direction {
-    // dbg!(origin, other);
     if other.y > origin.y {
         Direction::Up
     } else if other.y < origin.y {
@@ -47,6 +46,23 @@ fn detect_side(
         Direction::Left
     } else {
         panic!("should never happen");
+    }
+}
+
+impl From<Direction> for Quat {
+    fn from(value: Direction) -> Self {
+        match value {
+            Direction::Up => Quat::from_rotation_z(0.0),
+            Direction::Down => {
+                Quat::from_rotation_z(std::f32::consts::PI)
+            }
+            Direction::Left => Quat::from_rotation_z(
+                std::f32::consts::FRAC_PI_2,
+            ),
+            Direction::Right => Quat::from_rotation_z(
+                -std::f32::consts::FRAC_PI_2,
+            ),
+        }
     }
 }
 
@@ -66,19 +82,11 @@ pub fn render_snake_segments(
         .find(|pos| pos.0 == &snake.segments[0]);
 
     if let Some((pos, mut sprite, mut transform)) = head {
-        let rotation =
-            match detect_side(pos, &snake.segments[1]) {
-                Direction::Up => Quat::from_rotation_z(0.0),
-                Direction::Down => Quat::from_rotation_z(
-                    std::f32::consts::PI,
-                ),
-                Direction::Left => Quat::from_rotation_z(
-                    std::f32::consts::FRAC_PI_2,
-                ),
-                Direction::Right => Quat::from_rotation_z(
-                    -std::f32::consts::FRAC_PI_2,
-                ),
-            };
+        let rotation = Quat::from(detect_side(
+            pos,
+            &snake.segments[1],
+        ));
+
         sprite.index = snake_texture_index;
         transform.rotation = rotation;
     }
@@ -88,21 +96,10 @@ pub fn render_snake_segments(
     });
 
     if let Some((pos, mut sprite, mut transform)) = tail {
-        let rotation = match detect_side(
+        let rotation = Quat::from(detect_side(
             pos,
             &snake.segments[snake.segments.len() - 2],
-        ) {
-            Direction::Up => Quat::from_rotation_z(0.0),
-            Direction::Down => {
-                Quat::from_rotation_z(std::f32::consts::PI)
-            }
-            Direction::Left => Quat::from_rotation_z(
-                std::f32::consts::FRAC_PI_2,
-            ),
-            Direction::Right => Quat::from_rotation_z(
-                -std::f32::consts::FRAC_PI_2,
-            ),
-        };
+        ));
 
         sprite.index = snake_texture_index + 3;
         transform.rotation = rotation;
