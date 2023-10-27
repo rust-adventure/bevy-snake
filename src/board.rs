@@ -3,9 +3,12 @@ use itertools::Itertools;
 use rand::{
     distributions::WeightedIndex, prelude::Distribution,
 };
+pub mod position;
+use position::*;
 
 use crate::{
     assets::ImageAssets, colors::COLORS, food::Food,
+    snake::Snake,
 };
 
 const TILE_SIZE: f32 = 30.0;
@@ -13,12 +16,12 @@ const TILE_SPACER: f32 = 0.0;
 
 #[derive(Component)]
 pub struct Board {
-    pub size: u8,
+    pub size: u16,
     physical_size: f32,
 }
 
 impl Board {
-    fn new(size: u8) -> Self {
+    fn new(size: u16) -> Self {
         let physical_size = f32::from(size) * TILE_SIZE
             + f32::from(size + 1) * TILE_SPACER;
         Board {
@@ -26,13 +29,14 @@ impl Board {
             physical_size,
         }
     }
-    fn cell_position_to_physical(&self, pos: u8) -> f32 {
+    fn cell_position_to_physical(&self, pos: i32) -> f32 {
+        // let pos_f32: f32 = pos.try_into().unwrap();
         let offset =
             -self.physical_size / 2.0 + 0.5 * TILE_SIZE;
 
         offset
-            + f32::from(pos) * TILE_SIZE
-            + f32::from(pos + 1) * TILE_SPACER
+            + pos as f32 * TILE_SIZE
+            + (pos + 1) as f32 * TILE_SPACER
     }
     pub fn low_edge(&self) -> f32 {
         -self.physical_size / 2.0
@@ -41,18 +45,15 @@ impl Board {
         self.physical_size / 2.0
     }
     pub fn tiles(&self) -> impl Iterator<Item = Position> {
-        (0..self.size)
-            .cartesian_product(0..self.size)
-            .map(|(x, y)| Position { x, y })
+        (0..self.size).cartesian_product(0..self.size).map(
+            |(x, y)| {
+                Position(IVec2::new(
+                    i32::from(x),
+                    i32::from(y),
+                ))
+            },
+        )
     }
-}
-
-#[derive(
-    Debug, PartialEq, Copy, Clone, Eq, Hash, Component,
-)]
-pub struct Position {
-    pub x: u8,
-    pub y: u8,
 }
 
 pub fn spawn_board(
@@ -119,27 +120,36 @@ impl Command for SpawnSnakeSegment {
         let y = board
             .cell_position_to_physical(self.position.y);
 
-        let snake = world
+        let snake_atlas = world
             .get_resource::<ImageAssets>()
             .unwrap()
             .snake
             .clone();
 
-        world.spawn((
-            SpriteSheetBundle {
-                texture_atlas: snake,
-                sprite: TextureAtlasSprite {
-                    index: 8,
-                    custom_size: Some(Vec2::splat(
-                        TILE_SIZE,
-                    )),
-                    ..TextureAtlasSprite::default()
+        let entity = world
+            .spawn((
+                SpriteSheetBundle {
+                    texture_atlas: snake_atlas,
+                    sprite: TextureAtlasSprite {
+                        index: 8,
+                        custom_size: Some(Vec2::splat(
+                            TILE_SIZE,
+                        )),
+                        ..TextureAtlasSprite::default()
+                    },
+                    transform: Transform::from_xyz(
+                        x, y, 2.0,
+                    ),
+                    ..Default::default()
                 },
-                transform: Transform::from_xyz(x, y, 2.0),
-                ..Default::default()
-            },
-            self.position,
-        ));
+                self.position,
+            ))
+            .id();
+
+        let mut snake =
+            world.get_resource_mut::<Snake>().unwrap();
+
+        snake.segments.push_front(entity);
     }
 }
 

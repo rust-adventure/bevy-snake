@@ -2,8 +2,7 @@ use bevy::prelude::*;
 use rand::prelude::SliceRandom;
 
 use crate::{
-    board::{Board, Position, SpawnApple},
-    snake::Snake,
+    board::{position::Position, Board, SpawnApple},
     GameState,
 };
 
@@ -28,13 +27,15 @@ pub fn food_event_listener(
     mut commands: Commands,
     query_board: Query<&Board>,
     mut events: EventReader<NewFoodEvent>,
-    snake: Res<Snake>,
+    positions: Query<&Position>,
 ) {
     let board = query_board.single();
 
     let possible_food_locations = board
         .tiles()
-        .filter(|pos| !snake.segments.contains(pos))
+        .filter(|tile| {
+            !positions.iter().any(|pos| pos == tile)
+        })
         .collect::<Vec<Position>>();
 
     let num_food = events.read().count();

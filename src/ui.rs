@@ -193,7 +193,6 @@ pub fn pause_ui(
                         parent: entity,
                         text: "Exit"
                     });
-                  
                 });
             parent
                 .spawn((
