@@ -18,7 +18,13 @@ fn main() {
         .insert_resource(ClearColor(Color::rgb(
             0.52, 0.73, 0.17,
         )))
-        .add_plugins(DefaultPlugins)
+        .add_plugins(DefaultPlugins.set(WindowPlugin {
+            primary_window: Some(Window {
+                title: "Snake!".into(),
+                ..default()
+            }),
+            ..default()
+        }))
         .add_state::<GameState>()
         .insert_resource(Time::<Fixed>::from_seconds(0.1))
         .add_systems(
