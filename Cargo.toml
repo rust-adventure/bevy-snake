@@ -6,18 +6,17 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-# bevy = "0.11"
-# real bevy 0.12 commit:
-# bevy = { git = "https://github.com/bevyengine/bevy", rev = "66f72dd25bb9e3f3d035f2f14dcbcd25674f968c" }
-# match bevy_asset_loader version of bevy for now
-bevy = { git = "https://github.com/NiklasEi/bevy", branch = "bevy_asset_loader_0_12" }
+bevy = "0.12"
 itertools = "0.11"
 rand = "0.8.5"
 # bevy_asset_loader = { version = "0.17", features = ["2d"] }
 # 0.12 PR: https://github.com/NiklasEi/bevy_asset_loader/pull/158
-bevy_asset_loader = { git = "https://github.com/NiklasEi/bevy_asset_loader", rev = "7b6a1ffa3c4dcdad69dee282bcc3634c73799efe", features = [
+bevy_asset_loader = { git = "https://github.com/NiklasEi/bevy_asset_loader", rev = "ea40892df808b8ca3aabb99d0c09fc31ee8390dc", features = [
     "2d",
 ] }
+
+[patch."https://github.com/bevyengine/bevy"]
+bevy = "0.12"
 
 
 [features]
