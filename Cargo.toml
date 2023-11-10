@@ -9,14 +9,7 @@ edition = "2021"
 bevy = "0.12"
 itertools = "0.11"
 rand = "0.8.5"
-# bevy_asset_loader = { version = "0.17", features = ["2d"] }
-# 0.12 PR: https://github.com/NiklasEi/bevy_asset_loader/pull/158
-bevy_asset_loader = { git = "https://github.com/NiklasEi/bevy_asset_loader", rev = "ea40892df808b8ca3aabb99d0c09fc31ee8390dc", features = [
-    "2d",
-] }
-
-[patch."https://github.com/bevyengine/bevy"]
-bevy = "0.12"
+bevy_asset_loader = { version = "0.18", features = ["2d"] }
 
 
 [features]
