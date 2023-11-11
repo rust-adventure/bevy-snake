@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use snake::board::{spawn_board, Board};
 
 fn main() {
     App::new()
@@ -12,7 +13,8 @@ fn main() {
             }),
             ..default()
         }))
-        .add_systems(Startup, setup)
+        .insert_resource(Board::new(20))
+        .add_systems(Startup, (setup, spawn_board))
         .run();
 }
 
