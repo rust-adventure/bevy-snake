@@ -1,5 +1,5 @@
 use super::*;
-use crate::colors::COLORS;
+use crate::colors;
 use bevy::prelude::*;
 
 const OFFSET_TEXT_FROM_BOARD: f32 = 15.0;
@@ -22,12 +22,12 @@ pub fn scorekeeping_ui(
     let alfa_style = TextStyle {
         font: fonts.alfa_slab_one_regular.clone(),
         font_size: 25.0,
-        color: COLORS.text,
+        color: colors::TEXT,
     };
     let roboto_style = TextStyle {
         font: fonts.roboto.clone(),
         font_size: 50.0,
-        color: COLORS.text,
+        color: colors::TEXT,
     };
 
     commands.spawn((

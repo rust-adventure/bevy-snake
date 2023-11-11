@@ -7,8 +7,7 @@ pub mod position;
 use position::*;
 
 use crate::{
-    assets::ImageAssets, colors::COLORS, food::Food,
-    snake::Snake,
+    assets::ImageAssets, colors, food::Food, snake::Snake,
 };
 
 const TILE_SIZE: f32 = 30.0;
@@ -69,7 +68,7 @@ pub fn spawn_board(
     commands
         .spawn(SpriteBundle {
             sprite: Sprite {
-                color: COLORS.board,
+                color: colors::BOARD,
                 custom_size: Some(Vec2::splat(
                     board.physical_size,
                 )),

@@ -1,6 +1,6 @@
 use crate::{
     assets::{AudioAssets, FontAssets, ImageAssets},
-    colors::COLORS,
+    colors,
     settings::{AudioSettings, GameSettings},
     GameState,
 };
@@ -266,7 +266,7 @@ pub fn pause_ui(
                                     TextStyle {
                                         font:fonts.roboto.clone(),
                                         font_size: 25.0,
-                                        color: COLORS.text,
+                                        color: colors::TEXT,
                                     },
                                 ),
                             );
