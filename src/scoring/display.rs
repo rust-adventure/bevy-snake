@@ -15,10 +15,8 @@ pub fn scorekeeping_ui(
     score: Res<Score>,
     high_score: Res<HighScore>,
     fonts: Res<FontAssets>,
-    board: Query<&Board>,
+    board: Res<Board>,
 ) {
-    let board = board.single();
-
     let alfa_style = TextStyle {
         font: fonts.alfa_slab_one_regular.clone(),
         font_size: 25.0,

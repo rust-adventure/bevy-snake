@@ -40,14 +40,12 @@ pub fn tick(
     input: Res<controls::Direction>,
     query_food: Query<(Entity, &Position), With<Food>>,
     mut food_events: EventWriter<NewFoodEvent>,
-    query_board: Query<&Board>,
+    board: Res<Board>,
     sounds: Res<AudioAssets>,
     settings: Res<GameSettings>,
     mut score: ResMut<Score>,
     mut next_state: ResMut<NextState<GameState>>,
 ) {
-    let board = query_board.single();
-
     let mut next_position = *positions.get(snake.segments[0])
     .expect("expect stored entities in a snake to have Position components associated with them").1;
 

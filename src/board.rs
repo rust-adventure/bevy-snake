@@ -13,14 +13,14 @@ use crate::{
 const TILE_SIZE: f32 = 30.0;
 const TILE_SPACER: f32 = 0.0;
 
-#[derive(Component)]
+#[derive(Resource)]
 pub struct Board {
     pub size: u16,
     physical_size: f32,
 }
 
 impl Board {
-    fn new(size: u16) -> Self {
+    pub fn new(size: u16) -> Self {
         let physical_size = f32::from(size) * TILE_SIZE
             + f32::from(size + 1) * TILE_SPACER;
         Board {
@@ -29,7 +29,6 @@ impl Board {
         }
     }
     fn cell_position_to_physical(&self, pos: i32) -> f32 {
-        // let pos_f32: f32 = pos.try_into().unwrap();
         let offset =
             -self.physical_size / 2.0 + 0.5 * TILE_SIZE;
 
@@ -58,9 +57,8 @@ impl Board {
 pub fn spawn_board(
     mut commands: Commands,
     images: Res<ImageAssets>,
+    board: Res<Board>,
 ) {
-    let board = Board::new(20);
-
     let mut rng = rand::thread_rng();
     let weights = vec![3, 3, 1];
     let dist = WeightedIndex::new(weights).unwrap();
@@ -72,9 +70,9 @@ pub fn spawn_board(
                 custom_size: Some(Vec2::splat(
                     board.physical_size,
                 )),
-                ..Sprite::default()
+                ..default()
             },
-            ..Default::default()
+            ..default()
         })
         .with_children(|builder| {
             for pos in board.tiles() {
@@ -85,7 +83,7 @@ pub fn spawn_board(
                         custom_size: Some(Vec2::splat(
                             TILE_SIZE,
                         )),
-                        ..TextureAtlasSprite::default()
+                        ..default()
                     },
                     transform: Transform::from_xyz(
                         board.cell_position_to_physical(
@@ -96,11 +94,10 @@ pub fn spawn_board(
                         ),
                         1.0,
                     ),
-                    ..Default::default()
+                    ..default()
                 });
             }
-        })
-        .insert(board);
+        });
 }
 
 pub struct SpawnSnakeSegment {
@@ -109,11 +106,7 @@ pub struct SpawnSnakeSegment {
 
 impl Command for SpawnSnakeSegment {
     fn apply(self, world: &mut World) {
-        let board = world
-            .query::<&Board>()
-            .iter(world)
-            .next()
-            .unwrap();
+        let board = world.get_resource::<Board>().unwrap();
         let x = board
             .cell_position_to_physical(self.position.x);
         let y = board
@@ -134,12 +127,12 @@ impl Command for SpawnSnakeSegment {
                         custom_size: Some(Vec2::splat(
                             TILE_SIZE,
                         )),
-                        ..TextureAtlasSprite::default()
+                        ..default()
                     },
                     transform: Transform::from_xyz(
                         x, y, 2.0,
                     ),
-                    ..Default::default()
+                    ..default()
                 },
                 self.position,
             ))
@@ -158,11 +151,7 @@ pub struct SpawnApple {
 
 impl Command for SpawnApple {
     fn apply(self, world: &mut World) {
-        let board = world
-            .query::<&Board>()
-            .iter(world)
-            .next()
-            .unwrap();
+        let board = world.get_resource::<Board>().unwrap();
         let x = board
             .cell_position_to_physical(self.position.x);
         let y = board
@@ -180,11 +169,11 @@ impl Command for SpawnApple {
                     custom_size: Some(Vec2::splat(
                         TILE_SIZE,
                     )),
-                    ..Sprite::default()
+                    ..default()
                 },
                 texture: apple,
                 transform: Transform::from_xyz(x, y, 2.0),
-                ..Default::default()
+                ..default()
             },
             self.position,
             Food,

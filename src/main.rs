@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use snake::{
     assets::AssetsPlugin,
-    board::spawn_board,
+    board::{spawn_board, Board},
     controls::ControlsPlugin,
     food::FoodPlugin,
     reset_game,
@@ -25,6 +25,7 @@ fn main() {
             }),
             ..default()
         }))
+        .insert_resource(Board::new(20))
         .add_state::<GameState>()
         .insert_resource(Time::<Fixed>::from_seconds(0.1))
         .add_systems(

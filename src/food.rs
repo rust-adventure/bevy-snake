@@ -25,12 +25,10 @@ pub struct Food;
 
 pub fn food_event_listener(
     mut commands: Commands,
-    query_board: Query<&Board>,
+    board: Res<Board>,
     mut events: EventReader<NewFoodEvent>,
     positions: Query<&Position>,
 ) {
-    let board = query_board.single();
-
     let possible_food_locations = board
         .tiles()
         .filter(|tile| {
