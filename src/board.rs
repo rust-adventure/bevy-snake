@@ -16,7 +16,7 @@ const TILE_SPACER: f32 = 0.0;
 #[derive(Resource)]
 pub struct Board {
     pub size: u16,
-    physical_size: f32,
+    physical_size: Vec2,
 }
 
 impl Board {
@@ -25,25 +25,42 @@ impl Board {
             + f32::from(size + 1) * TILE_SPACER;
         Board {
             size,
-            physical_size,
+            physical_size: Vec2::new(
+                physical_size,
+                TILE_SIZE,
+            ),
         }
     }
-    fn cell_position_to_physical(&self, pos: i32) -> f32 {
+    fn cell_position_to_physical_x(&self, pos: i32) -> f32 {
         let offset =
-            -self.physical_size / 2.0 + 0.5 * TILE_SIZE;
+            -self.physical_size.x / 2.0 + 0.5 * TILE_SIZE;
 
         offset
             + pos as f32 * TILE_SIZE
             + (pos + 1) as f32 * TILE_SPACER
     }
-    pub fn low_edge(&self) -> f32 {
-        -self.physical_size / 2.0
+    fn cell_position_to_physical_y(&self, pos: i32) -> f32 {
+        let offset =
+            -self.physical_size.y / 2.0 + 0.5 * TILE_SIZE;
+
+        offset
+            + pos as f32 * TILE_SIZE
+            + (pos + 1) as f32 * TILE_SPACER
     }
-    pub fn high_edge(&self) -> f32 {
-        self.physical_size / 2.0
+    pub fn low_edge_x(&self) -> f32 {
+        -self.physical_size.x / 2.0
+    }
+    pub fn high_edge_x(&self) -> f32 {
+        self.physical_size.x / 2.0
+    }
+    pub fn low_edge_y(&self) -> f32 {
+        -self.physical_size.y / 2.0
+    }
+    pub fn high_edge_y(&self) -> f32 {
+        self.physical_size.y / 2.0
     }
     pub fn tiles(&self) -> impl Iterator<Item = Position> {
-        (0..self.size).cartesian_product(0..self.size).map(
+        (0..self.size).cartesian_product(0..1).map(
             |(x, y)| {
                 Position(IVec2::new(
                     i32::from(x),
@@ -67,35 +84,56 @@ pub fn spawn_board(
         .spawn(SpriteBundle {
             sprite: Sprite {
                 color: colors::BOARD,
-                custom_size: Some(Vec2::splat(
-                    board.physical_size,
-                )),
+                custom_size: Some(board.physical_size),
                 ..default()
             },
             ..default()
         })
         .with_children(|builder| {
             for pos in board.tiles() {
-                builder.spawn(SpriteSheetBundle {
-                    texture_atlas: images.grass.clone(),
-                    sprite: TextureAtlasSprite {
-                        index: dist.sample(&mut rng),
+                builder.spawn(SpriteBundle {
+                    sprite: Sprite {
+                        color: if (pos.x) % 2 == 0 {
+                            colors::TILE_PLACEHOLDER
+                        } else {
+                            colors::TILE_PLACEHOLDER_DARK
+                        },
                         custom_size: Some(Vec2::splat(
                             TILE_SIZE,
                         )),
                         ..default()
                     },
                     transform: Transform::from_xyz(
-                        board.cell_position_to_physical(
+                        board.cell_position_to_physical_x(
                             pos.x,
                         ),
-                        board.cell_position_to_physical(
+                        board.cell_position_to_physical_y(
                             pos.y,
                         ),
                         1.0,
                     ),
                     ..default()
                 });
+                // builder.spawn(SpriteSheetBundle {
+                //     texture_atlas: images.grass.clone(),
+                //     sprite: TextureAtlasSprite {
+                //         index: dist.sample(&mut rng),
+                //         custom_size: Some(Vec2::splat(
+                //             TILE_SIZE,
+                //         )),
+                //         ..default()
+                //     },
+                //     transform: Transform::from_xyz(
+                //         board.cell_position_to_physical_x(
+                //             pos.x,
+                //         ),
+                //         board.cell_position_to_physical_y(
+                //             pos.y,
+                //         ),
+                //         1.0,
+                //     ),
+                //     ..default()
+                // });
             }
         });
 }
@@ -108,9 +146,9 @@ impl Command for SpawnSnakeSegment {
     fn apply(self, world: &mut World) {
         let board = world.get_resource::<Board>().unwrap();
         let x = board
-            .cell_position_to_physical(self.position.x);
+            .cell_position_to_physical_x(self.position.x);
         let y = board
-            .cell_position_to_physical(self.position.y);
+            .cell_position_to_physical_y(self.position.y);
 
         let snake_atlas = world
             .get_resource::<ImageAssets>()
@@ -153,9 +191,9 @@ impl Command for SpawnApple {
     fn apply(self, world: &mut World) {
         let board = world.get_resource::<Board>().unwrap();
         let x = board
-            .cell_position_to_physical(self.position.x);
+            .cell_position_to_physical_x(self.position.x);
         let y = board
-            .cell_position_to_physical(self.position.y);
+            .cell_position_to_physical_y(self.position.y);
 
         let apple = world
             .get_resource::<ImageAssets>()

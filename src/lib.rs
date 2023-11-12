@@ -139,12 +139,12 @@ pub fn reset_game(
 
     commands.add({
         SpawnSnakeSegment {
-            position: Position::new(3, 4),
+            position: Position::new(0, 0),
         }
     });
     commands.add({
         SpawnSnakeSegment {
-            position: Position::new(4, 4),
+            position: Position::new(1, 0),
         }
     });
 

@@ -58,8 +58,8 @@ pub fn scorekeeping_ui(
             ])
             .with_alignment(TextAlignment::Right),
             transform: Transform::from_xyz(
-                board.low_edge() - OFFSET_TEXT_FROM_BOARD,
-                board.high_edge(),
+                board.low_edge_x() - OFFSET_TEXT_FROM_BOARD,
+                board.high_edge_x(),
                 1.0,
             ),
             text_anchor: Anchor::TopRight,
@@ -99,8 +99,9 @@ pub fn scorekeeping_ui(
                 },
             ]),
             transform: Transform::from_xyz(
-                board.high_edge() + OFFSET_TEXT_FROM_BOARD,
-                board.high_edge(),
+                board.high_edge_x()
+                    + OFFSET_TEXT_FROM_BOARD,
+                board.high_edge_x(),
                 1.0,
             ),
             text_anchor: Anchor::TopLeft,
