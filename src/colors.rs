@@ -18,3 +18,4 @@ pub const TILE_PLACEHOLDER_DARK: Color = Color::Lcha {
     hue: 122.,
     alpha: 1.,
 };
+pub const SNAKE: Color = Color::WHITE;

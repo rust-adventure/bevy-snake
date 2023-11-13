@@ -1,5 +1,8 @@
 use bevy::prelude::*;
-use snake::board::{spawn_board, Board};
+use snake::{
+    board::{spawn_board, Board},
+    snake::{spawn_snake, Snake},
+};
 
 fn main() {
     App::new()
@@ -14,7 +17,11 @@ fn main() {
             ..default()
         }))
         .insert_resource(Board::new(20))
-        .add_systems(Startup, (setup, spawn_board))
+        .init_resource::<Snake>()
+        .add_systems(
+            Startup,
+            (setup, spawn_board, spawn_snake),
+        )
         .run();
 }
 

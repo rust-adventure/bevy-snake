@@ -2,7 +2,7 @@ use crate::colors;
 use bevy::prelude::*;
 use itertools::Itertools;
 
-const TILE_SIZE: f32 = 30.0;
+pub const TILE_SIZE: f32 = 30.0;
 const TILE_SPACER: f32 = 0.0;
 
 #[derive(Resource)]
@@ -20,7 +20,10 @@ impl Board {
             physical_size,
         }
     }
-    fn cell_position_to_physical(&self, pos: i32) -> f32 {
+    pub fn cell_position_to_physical(
+        &self,
+        pos: i32,
+    ) -> f32 {
         let offset =
             -self.physical_size / 2.0 + 0.5 * TILE_SIZE;
 
@@ -29,6 +32,9 @@ impl Board {
             + (pos + 1) as f32 * TILE_SPACER
     }
 }
+
+#[derive(Debug, Component)]
+pub struct Position(pub IVec2);
 
 pub fn spawn_board(
     mut commands: Commands,
