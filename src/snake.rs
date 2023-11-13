@@ -16,10 +16,9 @@ pub fn spawn_snake(
     board: Res<Board>,
     mut snake: ResMut<Snake>,
 ) {
-    for position in [
-        Position(IVec2::new(3, 4)),
-        Position(IVec2::new(4, 4)),
-    ] {
+    for position in
+        [Position::new(3, 4), Position::new(4, 4)]
+    {
         let entity = commands
             .spawn((
                 SpriteBundle {
@@ -32,10 +31,10 @@ pub fn spawn_snake(
                     },
                     transform: Transform::from_xyz(
                         board.cell_position_to_physical(
-                            position.0.x,
+                            position.x,
                         ),
                         board.cell_position_to_physical(
-                            position.0.y,
+                            position.y,
                         ),
                         2.0,
                     ),

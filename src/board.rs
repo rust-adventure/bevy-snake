@@ -33,8 +33,14 @@ impl Board {
     }
 }
 
-#[derive(Debug, Component)]
-pub struct Position(pub IVec2);
+#[derive(Debug, Component, Deref, DerefMut)]
+pub struct Position(IVec2);
+
+impl Position {
+    pub fn new(x: i32, y: i32) -> Self {
+        Self(IVec2::new(x, y))
+    }
+}
 
 pub fn spawn_board(
     mut commands: Commands,
