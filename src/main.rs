@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use snake::{
     board::{spawn_board, Board},
     snake::{spawn_snake, Snake},
+    tick,
 };
 
 fn main() {
@@ -18,10 +19,12 @@ fn main() {
         }))
         .insert_resource(Board::new(20))
         .init_resource::<Snake>()
+        .insert_resource(Time::<Fixed>::from_seconds(0.1))
         .add_systems(
             Startup,
             (setup, spawn_board, spawn_snake),
         )
+        .add_systems(FixedUpdate, tick)
         .run();
 }
 
