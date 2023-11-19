@@ -33,7 +33,7 @@ impl Board {
     }
 }
 
-#[derive(Debug, Component, Deref, DerefMut)]
+#[derive(Debug, Component, Deref, DerefMut, Clone)]
 pub struct Position(IVec2);
 
 impl Position {
