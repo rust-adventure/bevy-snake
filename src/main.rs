@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use snake::{
     board::{spawn_board, Board},
     controls::ControlsPlugin,
+    food::spawn_apple,
     snake::{spawn_snake, Snake},
     tick,
 };
@@ -26,7 +27,12 @@ fn main() {
         .insert_resource(Time::<Fixed>::from_seconds(0.1))
         .add_systems(
             Startup,
-            (setup, spawn_board, spawn_snake),
+            (
+                setup,
+                spawn_board,
+                spawn_snake,
+                spawn_apple,
+            ),
         )
         .add_systems(FixedUpdate, tick)
         .run();

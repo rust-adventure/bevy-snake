@@ -19,3 +19,4 @@ pub const TILE_PLACEHOLDER_DARK: Color = Color::Lcha {
     alpha: 1.,
 };
 pub const SNAKE: Color = Color::WHITE;
+pub const FOOD: Color = Color::RED;

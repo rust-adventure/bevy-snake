@@ -1,10 +1,12 @@
 pub mod board;
 pub mod colors;
 pub mod controls;
+pub mod food;
 pub mod snake;
 
 use bevy::prelude::*;
 use board::Position;
+use food::Food;
 use snake::{Snake, SpawnSnakeSegment};
 
 pub fn tick(
@@ -12,6 +14,7 @@ pub fn tick(
     mut snake: ResMut<Snake>,
     positions: Query<&Position>,
     input: Res<controls::Direction>,
+    query_food: Query<(Entity, &Position), With<Food>>,
 ) {
     let snake_head_entity = snake
         .segments
@@ -34,9 +37,21 @@ pub fn tick(
         position: next_position,
     });
 
-    let old_tail = snake
-        .segments
-        .pop_back()
-        .expect("snake should have a tail entity");
-    commands.entity(old_tail).despawn_recursive();
+    let is_food = query_food
+        .iter()
+        .find(|(_, food_pos)| &&next_position == food_pos);
+    match is_food {
+        Some((food_entity, _)) => {
+            commands
+                .entity(food_entity)
+                .despawn_recursive();
+        }
+        None => {
+            let old_tail = snake
+                .segments
+                .pop_back()
+                .expect("snake should have a tail entity");
+            commands.entity(old_tail).despawn_recursive();
+        }
+    }
 }

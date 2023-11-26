@@ -36,7 +36,13 @@ impl Board {
 }
 
 #[derive(
-    Debug, Component, Deref, DerefMut, Clone, Copy,
+    Debug,
+    Component,
+    Deref,
+    DerefMut,
+    Clone,
+    Copy,
+    PartialEq,
 )]
 pub struct Position(IVec2);
 
