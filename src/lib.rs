@@ -4,7 +4,7 @@ pub mod snake;
 
 use bevy::prelude::*;
 use board::Position;
-use snake::Snake;
+use snake::{Snake, SpawnSnakeSegment};
 
 pub fn tick(
     mut commands: Commands,
@@ -22,16 +22,13 @@ pub fn tick(
         })
         .expect("stored entities in a snake should have a Position component associated with them");
 
-    // TODO: Spawn sprite in here
-    let entity = commands.spawn(next_position).id();
-
-    snake.segments.push_front(entity);
+    commands.add(SpawnSnakeSegment {
+        position: next_position,
+    });
 
     let old_tail = snake
         .segments
         .pop_back()
         .expect("snake should have a tail entity");
     commands.entity(old_tail).despawn_recursive();
-
-    info!(?snake);
 }

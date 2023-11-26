@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{ecs::system::Command, prelude::*};
 use std::collections::VecDeque;
 
 use crate::{
@@ -11,15 +11,27 @@ pub struct Snake {
     pub segments: VecDeque<Entity>,
 }
 
-pub fn spawn_snake(
-    mut commands: Commands,
-    board: Res<Board>,
-    mut snake: ResMut<Snake>,
-) {
+pub fn spawn_snake(mut commands: Commands) {
     for position in
         [Position::new(3, 4), Position::new(4, 4)]
     {
-        let entity = commands
+        commands.add(SpawnSnakeSegment { position });
+    }
+}
+
+pub struct SpawnSnakeSegment {
+    pub position: Position,
+}
+
+impl Command for SpawnSnakeSegment {
+    fn apply(self, world: &mut World) {
+        let board = world.get_resource::<Board>().unwrap();
+        let x = board
+            .cell_position_to_physical(self.position.x);
+        let y = board
+            .cell_position_to_physical(self.position.y);
+
+        let entity = world
             .spawn((
                 SpriteBundle {
                     sprite: Sprite {
@@ -30,19 +42,16 @@ pub fn spawn_snake(
                         ..default()
                     },
                     transform: Transform::from_xyz(
-                        board.cell_position_to_physical(
-                            position.x,
-                        ),
-                        board.cell_position_to_physical(
-                            position.y,
-                        ),
-                        2.0,
+                        x, y, 2.0,
                     ),
                     ..default()
                 },
-                position,
+                self.position,
             ))
             .id();
+
+        let mut snake =
+            world.get_resource_mut::<Snake>().unwrap();
 
         snake.segments.push_front(entity);
     }
