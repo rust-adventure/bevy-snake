@@ -33,6 +33,13 @@ impl Board {
             + pos as f32 * TILE_SIZE
             + (pos + 1) as f32 * TILE_SPACER
     }
+    pub fn tiles(&self) -> impl Iterator<Item = Position> {
+        (0..self.size).cartesian_product(0..self.size).map(
+            |(x, y)| {
+                Position::new(i32::from(x), i32::from(y))
+            },
+        )
+    }
 }
 
 #[derive(
@@ -76,9 +83,7 @@ pub fn spawn_board(
             ..default()
         })
         .with_children(|parent| {
-            for (x, y) in (0..board.size)
-                .cartesian_product(0..board.size)
-            {
+            for Position(IVec2 { x, y }) in board.tiles() {
                 parent.spawn(SpriteBundle {
                     sprite: Sprite {
                         color: if (x + y) % 2 == 0 {
@@ -92,12 +97,8 @@ pub fn spawn_board(
                         ..default()
                     },
                     transform: Transform::from_xyz(
-                        board.cell_position_to_physical(
-                            i32::from(x),
-                        ),
-                        board.cell_position_to_physical(
-                            i32::from(y),
-                        ),
+                        board.cell_position_to_physical(x),
+                        board.cell_position_to_physical(y),
                         1.0,
                     ),
                     ..default()

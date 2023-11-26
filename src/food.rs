@@ -1,4 +1,5 @@
 use bevy::{ecs::system::Command, prelude::*};
+use rand::seq::IteratorRandom;
 
 use crate::{
     board::{Board, Position, TILE_SIZE},
@@ -11,8 +12,40 @@ pub fn spawn_apple(mut commands: Commands) {
     })
 }
 
+pub struct FoodPlugin;
+
+impl Plugin for FoodPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_event::<NewFoodEvent>()
+            .add_systems(Update, food_event_listener);
+    }
+}
+
+#[derive(Event)]
+pub struct NewFoodEvent;
+
 #[derive(Component)]
 pub struct Food;
+
+pub fn food_event_listener(
+    mut commands: Commands,
+    board: Res<Board>,
+    mut events: EventReader<NewFoodEvent>,
+    positions: Query<&Position>,
+) {
+    let num_food = events.read().count();
+
+    let mut rng = rand::thread_rng();
+    for pos in board
+        .tiles()
+        .filter(|tile| {
+            !positions.iter().any(|pos| pos == tile)
+        })
+        .choose_multiple(&mut rng, num_food)
+    {
+        commands.add(SpawnApple { position: pos });
+    }
+}
 
 pub struct SpawnApple {
     pub position: Position,

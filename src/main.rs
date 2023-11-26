@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use snake::{
     board::{spawn_board, Board},
     controls::ControlsPlugin,
-    food::spawn_apple,
+    food::{spawn_apple, FoodPlugin},
     snake::{spawn_snake, Snake},
     tick,
 };
@@ -21,6 +21,7 @@ fn main() {
                 ..default()
             }),
             ControlsPlugin,
+            FoodPlugin,
         ))
         .insert_resource(Board::new(20))
         .init_resource::<Snake>()

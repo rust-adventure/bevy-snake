@@ -6,7 +6,7 @@ pub mod snake;
 
 use bevy::prelude::*;
 use board::Position;
-use food::Food;
+use food::{Food, NewFoodEvent};
 use snake::{Snake, SpawnSnakeSegment};
 
 pub fn tick(
@@ -15,6 +15,7 @@ pub fn tick(
     positions: Query<&Position>,
     input: Res<controls::Direction>,
     query_food: Query<(Entity, &Position), With<Food>>,
+    mut food_events: EventWriter<NewFoodEvent>,
 ) {
     let snake_head_entity = snake
         .segments
@@ -45,6 +46,7 @@ pub fn tick(
             commands
                 .entity(food_entity)
                 .despawn_recursive();
+            food_events.send(NewFoodEvent);
         }
         None => {
             let old_tail = snake
