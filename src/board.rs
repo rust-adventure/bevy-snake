@@ -1,3 +1,5 @@
+use std::ops::Add;
+
 use crate::colors;
 use bevy::prelude::*;
 use itertools::Itertools;
@@ -33,12 +35,22 @@ impl Board {
     }
 }
 
-#[derive(Debug, Component, Deref, DerefMut, Clone)]
+#[derive(
+    Debug, Component, Deref, DerefMut, Clone, Copy,
+)]
 pub struct Position(IVec2);
 
 impl Position {
     pub fn new(x: i32, y: i32) -> Self {
         Self(IVec2::new(x, y))
+    }
+}
+
+impl Add for Position {
+    type Output = Position;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Self(self.0 + rhs.0)
     }
 }
 

@@ -10,6 +10,7 @@ pub fn tick(
     mut commands: Commands,
     mut snake: ResMut<Snake>,
     positions: Query<&Position>,
+    input: Res<Input<KeyCode>>,
 ) {
     let snake_head_entity = snake
         .segments
@@ -18,7 +19,18 @@ pub fn tick(
 
     let next_position = positions.get(*snake_head_entity)
         .map(|head| {
-            Position::new(head.x + 1, head.y)
+            let diff = if input.pressed(KeyCode::Up) {
+                Position::new(0,1)
+            } else if input.pressed(KeyCode::Down) {
+                Position::new(0,-1)
+            } else if input.pressed(KeyCode::Left) {
+                Position::new(-1,0)
+            } else if input.pressed(KeyCode::Right) {
+                Position::new(1,0)
+            } else {
+                Position::new(0,0)
+            };
+            *head + diff
         })
         .expect("stored entities in a snake should have a Position component associated with them");
 
