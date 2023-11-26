@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use snake::{
     board::{spawn_board, Board},
+    controls::ControlsPlugin,
     snake::{spawn_snake, Snake},
     tick,
 };
@@ -10,13 +11,16 @@ fn main() {
         .insert_resource(ClearColor(Color::rgb(
             0.52, 0.73, 0.17,
         )))
-        .add_plugins(DefaultPlugins.set(WindowPlugin {
-            primary_window: Some(Window {
-                title: "Snake!".into(),
+        .add_plugins((
+            DefaultPlugins.set(WindowPlugin {
+                primary_window: Some(Window {
+                    title: "Snake!".into(),
+                    ..default()
+                }),
                 ..default()
             }),
-            ..default()
-        }))
+            ControlsPlugin,
+        ))
         .insert_resource(Board::new(20))
         .init_resource::<Snake>()
         .insert_resource(Time::<Fixed>::from_seconds(0.1))
