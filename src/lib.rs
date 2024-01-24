@@ -9,6 +9,15 @@ use board::Position;
 use food::{Food, NewFoodEvent};
 use snake::{Snake, SpawnSnakeSegment};
 
+#[derive(
+    Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States,
+)]
+pub enum GameState {
+    #[default]
+    Menu,
+    Playing,
+}
+
 pub fn tick(
     mut commands: Commands,
     mut snake: ResMut<Snake>,

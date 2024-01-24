@@ -4,7 +4,7 @@ use snake::{
     controls::ControlsPlugin,
     food::{spawn_apple, FoodPlugin},
     snake::{spawn_snake, Snake},
-    tick,
+    tick, GameState,
 };
 
 fn main() {
@@ -26,6 +26,7 @@ fn main() {
         .insert_resource(Board::new(20))
         .init_resource::<Snake>()
         .insert_resource(Time::<Fixed>::from_seconds(0.1))
+        .add_state::<GameState>()
         .add_systems(
             Startup,
             (
@@ -35,7 +36,10 @@ fn main() {
                 spawn_apple,
             ),
         )
-        .add_systems(FixedUpdate, tick)
+        .add_systems(
+            FixedUpdate,
+            tick.run_if(in_state(GameState::Playing)),
+        )
         .run();
 }
 
