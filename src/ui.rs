@@ -121,7 +121,7 @@ struct AudioSettingsCheckbox;
 pub fn pause_ui(
     mut commands: Commands,
     images: Res<ImageAssets>,
-    atlases: Res<Assets<TextureAtlas>>,
+    atlases: Res<Assets<TextureAtlasLayout>>,
     fonts: Res<FontAssets>,
 ) {
     commands

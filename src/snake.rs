@@ -3,7 +3,7 @@ use std::collections::VecDeque;
 use bevy::{
     math::Quat,
     prelude::{Entity, Query, Res, Resource, Transform},
-    sprite::TextureAtlasSprite,
+    sprite::TextureAtlas,
 };
 use itertools::Itertools;
 
@@ -21,7 +21,7 @@ pub fn render_snake_segments(
     snake: Res<Snake>,
     mut positions: Query<(
         &Position,
-        &mut TextureAtlasSprite,
+        &mut TextureAtlas,
         &mut Transform,
     )>,
     settings: Res<GameSettings>,

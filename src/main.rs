@@ -26,7 +26,7 @@ fn main() {
             ..default()
         }))
         .insert_resource(Board::new(20))
-        .add_state::<GameState>()
+        .init_state::<GameState>()
         .insert_resource(Time::<Fixed>::from_seconds(0.1))
         .add_systems(
             FixedUpdate,

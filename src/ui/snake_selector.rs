@@ -41,7 +41,7 @@ pub struct CurrentSnake;
 pub fn update_current_snake(
     settings: ResMut<GameSettings>,
     mut image_query: Query<
-        &mut UiTextureAtlasImage,
+        &mut TextureAtlas,
         With<CurrentSnake>,
     >,
 ) {
@@ -54,7 +54,7 @@ pub fn spawn_snake_selector(
     parent: &mut ChildBuilder,
     images: Res<ImageAssets>,
     current_snake_index: usize,
-    atlases: &Res<Assets<TextureAtlas>>,
+    atlases: &Res<Assets<TextureAtlasLayout>>,
     fonts: &Res<FontAssets>,
 ) {
     parent
@@ -68,7 +68,7 @@ pub fn spawn_snake_selector(
         })
         .with_children(|parent| {
             parent.spawn((
-                AtlasImageBundle {
+                ImageBundle {
                     style: Style {
                         width: Val::Px(25.0),
                         height: Val::Px(25.0),
@@ -77,13 +77,14 @@ pub fn spawn_snake_selector(
                         )),
                         ..default()
                     },
-                    texture_atlas: images.snake.clone(),
-                    texture_atlas_image:
-                        UiTextureAtlasImage {
-                            index: current_snake_index,
-                            ..default()
-                        },
+                    image: UiImage::new(
+                        images.snake.clone(),
+                    ),
                     ..default()
+                },
+                TextureAtlas {
+                    layout: images.snake_layout.clone(),
+                    index: current_snake_index,
                 },
                 CurrentSnake,
             ));
@@ -114,7 +115,7 @@ pub fn spawn_snake_selector(
         })
         .with_children(|parent| {
             let atlas = atlases
-                .get(&images.snake)
+                .get(&images.snake_layout)
                 .expect("snake textureatlas to be loaded");
 
             for (i, _rect) in
@@ -138,22 +139,26 @@ pub fn spawn_snake_selector(
                         SnakeHead(i),
                     ))
                     .with_children(|parent| {
-                        parent.spawn(AtlasImageBundle {
-                            style: Style {
-                                width: Val::Px(50.0),
-                                height: Val::Px(50.0),
-                                ..default()
-                            },
-                            texture_atlas: images
-                                .snake
-                                .clone(),
-                            texture_atlas_image:
-                                UiTextureAtlasImage {
-                                    index: i,
+                        parent.spawn((
+                            ImageBundle {
+                                style: Style {
+                                    width: Val::Px(50.0),
+                                    height: Val::Px(50.0),
                                     ..default()
                                 },
-                            ..default()
-                        });
+                                image: images
+                                    .snake
+                                    .clone()
+                                    .into(),
+                                ..default()
+                            },
+                            TextureAtlas {
+                                layout: images
+                                    .snake_layout
+                                    .clone(),
+                                index: i,
+                            },
+                        ));
                     });
             }
         });

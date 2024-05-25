@@ -56,7 +56,7 @@ pub fn scorekeeping_ui(
                     style: roboto_style.clone(),
                 },
             ])
-            .with_alignment(TextAlignment::Right),
+            .with_justify(JustifyText::Right),
             transform: Transform::from_xyz(
                 board.low_edge() - OFFSET_TEXT_FROM_BOARD,
                 board.high_edge(),

@@ -76,26 +76,33 @@ pub fn spawn_board(
         })
         .with_children(|builder| {
             for pos in board.tiles() {
-                builder.spawn(SpriteSheetBundle {
-                    texture_atlas: images.grass.clone(),
-                    sprite: TextureAtlasSprite {
-                        index: dist.sample(&mut rng),
-                        custom_size: Some(Vec2::splat(
-                            TILE_SIZE,
-                        )),
+                builder.spawn((
+                    SpriteBundle {
+                        texture: images.grass.clone(),
+                        sprite: Sprite {
+                            custom_size: Some(Vec2::splat(
+                                TILE_SIZE,
+                            )),
+                            ..default()
+                        },
+                        transform: Transform::from_xyz(
+                            board
+                                .cell_position_to_physical(
+                                    pos.x,
+                                ),
+                            board
+                                .cell_position_to_physical(
+                                    pos.y,
+                                ),
+                            1.0,
+                        ),
                         ..default()
                     },
-                    transform: Transform::from_xyz(
-                        board.cell_position_to_physical(
-                            pos.x,
-                        ),
-                        board.cell_position_to_physical(
-                            pos.y,
-                        ),
-                        1.0,
-                    ),
-                    ..default()
-                });
+                    TextureAtlas {
+                        layout: images.grass_layout.clone(),
+                        index: dist.sample(&mut rng),
+                    },
+                ));
             }
         });
 }
@@ -112,18 +119,23 @@ impl Command for SpawnSnakeSegment {
         let y = board
             .cell_position_to_physical(self.position.y);
 
-        let snake_atlas = world
+        let snake_image = world
             .get_resource::<ImageAssets>()
             .unwrap()
             .snake
             .clone();
 
+        let snake_layout = world
+            .get_resource::<ImageAssets>()
+            .unwrap()
+            .snake_layout
+            .clone();
+
         let entity = world
             .spawn((
-                SpriteSheetBundle {
-                    texture_atlas: snake_atlas,
-                    sprite: TextureAtlasSprite {
-                        index: 8,
+                SpriteBundle {
+                    texture: snake_image,
+                    sprite: Sprite {
                         custom_size: Some(Vec2::splat(
                             TILE_SIZE,
                         )),
@@ -133,6 +145,10 @@ impl Command for SpawnSnakeSegment {
                         x, y, 2.0,
                     ),
                     ..default()
+                },
+                TextureAtlas {
+                    index: 8,
+                    layout: snake_layout.clone(),
                 },
                 self.position,
             ))

@@ -45,9 +45,10 @@ pub struct ImageAssets {
         padding_x = 0.,
         padding_y = 0.
     ))]
+    pub grass_layout: Handle<TextureAtlasLayout>,
     #[asset(path = "grass.png")]
-    pub grass: Handle<TextureAtlas>,
-    #[asset(texture_atlas(
+    pub grass: Handle<Image>,
+    #[asset(texture_atlas_layout(
         tile_size_x = 136.,
         tile_size_y = 136.,
         columns = 4,
@@ -55,6 +56,7 @@ pub struct ImageAssets {
         padding_x = 0.,
         padding_y = 0.
     ))]
+    pub snake_layout: Handle<TextureAtlasLayout>,
     #[asset(path = "snake_sprites.png")]
-    pub snake: Handle<TextureAtlas>,
+    pub snake: Handle<Image>,
 }
