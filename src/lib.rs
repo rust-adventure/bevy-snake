@@ -161,15 +161,15 @@ pub fn spawn_menu(
                 TextStyle {
                     font: fonts.outfit.clone(),
                     font_size: 40.0,
-                    color: Color::rgb(0.1, 0.1, 0.1),
+                    color: Color::srgb(0.1, 0.1, 0.1),
                 },
             ));
         });
 }
 
-const NORMAL_BUTTON: Color = Color::rgb(0.95, 0.95, 0.95);
-const HOVERED_BUTTON: Color = Color::rgb(0.85, 0.85, 0.85);
-const PRESSED_BUTTON: Color = Color::rgb(0.75, 0.75, 0.75);
+const NORMAL_BUTTON: Color = Color::srgb(0.95, 0.95, 0.95);
+const HOVERED_BUTTON: Color = Color::srgb(0.85, 0.85, 0.85);
+const PRESSED_BUTTON: Color = Color::srgb(0.75, 0.75, 0.75);
 
 pub fn button_system(
     mut interaction_query: Query<

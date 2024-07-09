@@ -12,7 +12,7 @@ use snake::{
 
 fn main() {
     App::new()
-        .insert_resource(ClearColor(Color::rgb(
+        .insert_resource(ClearColor(Color::srgb(
             0.52, 0.73, 0.17,
         )))
         .add_plugins(DefaultPlugins.set(WindowPlugin {
