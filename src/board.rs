@@ -1,4 +1,4 @@
-use bevy::{ecs::world::Command, prelude::*};
+use bevy::prelude::*;
 use itertools::Itertools;
 use rand::{
     distributions::WeightedIndex, prelude::Distribution,
@@ -6,7 +6,7 @@ use rand::{
 pub mod position;
 use position::*;
 
-use crate::{assets::ImageAssets, colors, snake::Snake};
+use crate::{assets::ImageAssets, colors};
 
 pub const TILE_SIZE: f32 = 30.0;
 pub const TILE_SPACER: f32 = 0.0;
@@ -106,58 +106,4 @@ pub fn spawn_board(
                 ));
             }
         });
-}
-
-pub struct SpawnSnakeSegment {
-    pub position: Position,
-}
-
-impl Command for SpawnSnakeSegment {
-    fn apply(self, world: &mut World) {
-        let board = world.get_resource::<Board>().unwrap();
-        let x = board
-            .cell_position_to_physical(self.position.x);
-        let y = board
-            .cell_position_to_physical(self.position.y);
-
-        let snake_image = world
-            .get_resource::<ImageAssets>()
-            .unwrap()
-            .snake
-            .clone();
-
-        let snake_layout = world
-            .get_resource::<ImageAssets>()
-            .unwrap()
-            .snake_layout
-            .clone();
-
-        let entity = world
-            .spawn((
-                SpriteBundle {
-                    texture: snake_image,
-                    sprite: Sprite {
-                        custom_size: Some(Vec2::splat(
-                            TILE_SIZE,
-                        )),
-                        ..default()
-                    },
-                    transform: Transform::from_xyz(
-                        x, y, 2.0,
-                    ),
-                    ..default()
-                },
-                TextureAtlas {
-                    index: 8,
-                    layout: snake_layout.clone(),
-                },
-                self.position,
-            ))
-            .id();
-
-        let mut snake =
-            world.get_resource_mut::<Snake>().unwrap();
-
-        snake.segments.push_front(entity);
-    }
 }

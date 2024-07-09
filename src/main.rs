@@ -6,7 +6,7 @@ use snake::{
     controls::ControlsPlugin,
     food::FoodPlugin,
     reset_game,
-    snake::{render_snake_segments, Snake},
+    snake::SnakePlugin,
     spawn_menu, tick, GameState,
 };
 
@@ -33,13 +33,11 @@ fn main() {
             ControlsPlugin,
             FoodPlugin,
             AssetsPlugin,
+            SnakePlugin,
         ))
-        .init_resource::<Snake>()
-        .add_systems(Startup, (setup, spawn_board))
         .add_systems(
-            Update,
-            render_snake_segments
-                .run_if(in_state(GameState::Playing)),
+            OnEnter(GameState::Startup),
+            (setup, spawn_board, start_menu).chain(),
         )
         .add_systems(
             OnEnter(GameState::Playing),
@@ -50,7 +48,14 @@ fn main() {
             Update,
             button_system.run_if(in_state(GameState::Menu)),
         )
+        .enable_state_scoped_entities::<GameState>()
         .run();
+}
+
+fn start_menu(
+    mut next_state: ResMut<NextState<GameState>>,
+) {
+    next_state.set(GameState::Menu);
 }
 
 fn setup(mut commands: Commands) {

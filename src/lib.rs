@@ -1,9 +1,9 @@
 use assets::{AudioAssets, FontAssets};
 use bevy::prelude::*;
-use board::{position::Position, Board, SpawnSnakeSegment};
+use board::{position::Position, Board};
 use controls::Direction::*;
 use food::{Food, NewFoodEvent};
-use snake::Snake;
+use snake::{Snake, SpawnSnakeSegmentEvent};
 
 pub mod assets;
 pub mod board;
@@ -17,6 +17,7 @@ pub mod snake;
 )]
 pub enum GameState {
     #[default]
+    Startup,
     Menu,
     Playing,
 }
@@ -82,8 +83,8 @@ pub fn tick(
         return;
     }
 
-    commands.add({
-        SpawnSnakeSegment {
+    commands.trigger({
+        SpawnSnakeSegmentEvent {
             position: next_position,
         }
     });
@@ -122,13 +123,13 @@ pub fn reset_game(
         commands.entity(entity).despawn_recursive();
     }
 
-    commands.add({
-        SpawnSnakeSegment {
+    commands.trigger({
+        SpawnSnakeSegmentEvent {
             position: Position::new(3, 4),
         }
     });
-    commands.add({
-        SpawnSnakeSegment {
+    commands.trigger({
+        SpawnSnakeSegmentEvent {
             position: Position::new(4, 4),
         }
     });
@@ -143,16 +144,19 @@ pub fn spawn_menu(
     fonts: Res<FontAssets>,
 ) {
     commands
-        .spawn(ButtonBundle {
-            style: Style {
-                width: Val::Percent(100.0),
-                height: Val::Px(65.0),
-                justify_content: JustifyContent::Center,
-                align_items: AlignItems::Center,
+        .spawn((
+            ButtonBundle {
+                style: Style {
+                    width: Val::Percent(100.0),
+                    height: Val::Px(65.0),
+                    justify_content: JustifyContent::Center,
+                    align_items: AlignItems::Center,
+                    ..default()
+                },
                 ..default()
             },
-            ..default()
-        })
+            StateScoped(GameState::Menu),
+        ))
         .with_children(|parent| {
             parent.spawn(TextBundle::from_section(
                 "New Game",

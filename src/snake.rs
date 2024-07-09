@@ -1,13 +1,41 @@
 use std::collections::VecDeque;
 
 use bevy::{
-    math::Quat,
-    prelude::{Entity, Query, Res, Resource, Transform},
-    sprite::TextureAtlas,
+    app::{Plugin, Update},
+    math::{Quat, Vec2},
+    prelude::{
+        default, Commands, Entity, Event,
+        IntoSystemConfigs, Query, Res, ResMut, Resource,
+        Transform, Trigger,
+    },
+    sprite::{Sprite, SpriteBundle, TextureAtlas},
+    state::condition::in_state,
 };
 use itertools::Itertools;
 
-use crate::board::position::{Position, RelativePosition};
+use crate::{
+    assets::ImageAssets,
+    board::{
+        position::{Position, RelativePosition},
+        Board, TILE_SIZE,
+    },
+    GameState,
+};
+
+pub struct SnakePlugin;
+
+impl Plugin for SnakePlugin {
+    fn build(&self, app: &mut bevy::prelude::App) {
+        app.add_event::<SpawnSnakeSegmentEvent>()
+            .init_resource::<Snake>()
+            .add_systems(
+                Update,
+                render_snake_segments
+                    .run_if(in_state(GameState::Playing)),
+            )
+            .observe(spawn_snake_segment);
+    }
+}
 
 #[derive(Debug, Default, Resource)]
 pub struct Snake {
@@ -112,4 +140,43 @@ pub fn render_snake_segments(
         sprite.index = image.0;
         transform.rotation = image.1;
     }
+}
+
+#[derive(Event)]
+pub struct SpawnSnakeSegmentEvent {
+    pub position: Position,
+}
+fn spawn_snake_segment(
+    trigger: Trigger<SpawnSnakeSegmentEvent>,
+    mut commands: Commands,
+    board: Res<Board>,
+    image_assets: Res<ImageAssets>,
+    mut snake: ResMut<Snake>,
+) {
+    let position = trigger.event().position;
+    let x = board.cell_position_to_physical(position.x);
+    let y = board.cell_position_to_physical(position.y);
+
+    let entity = commands
+        .spawn((
+            SpriteBundle {
+                texture: image_assets.snake.clone(),
+                sprite: Sprite {
+                    custom_size: Some(Vec2::splat(
+                        TILE_SIZE,
+                    )),
+                    ..default()
+                },
+                transform: Transform::from_xyz(x, y, 2.0),
+                ..default()
+            },
+            TextureAtlas {
+                index: 8,
+                layout: image_assets.snake_layout.clone(),
+            },
+            position,
+        ))
+        .id();
+
+    snake.segments.push_front(entity);
 }
