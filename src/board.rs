@@ -6,12 +6,10 @@ use rand::{
 pub mod position;
 use position::*;
 
-use crate::{
-    assets::ImageAssets, colors, food::Food, snake::Snake,
-};
+use crate::{assets::ImageAssets, colors, snake::Snake};
 
-const TILE_SIZE: f32 = 30.0;
-const TILE_SPACER: f32 = 0.0;
+pub const TILE_SIZE: f32 = 30.0;
+pub const TILE_SPACER: f32 = 0.0;
 
 #[derive(Resource)]
 pub struct Board {
@@ -28,7 +26,10 @@ impl Board {
             physical_size,
         }
     }
-    fn cell_position_to_physical(&self, pos: i32) -> f32 {
+    pub fn cell_position_to_physical(
+        &self,
+        pos: i32,
+    ) -> f32 {
         let offset =
             -self.physical_size / 2.0 + 0.5 * TILE_SIZE;
 
@@ -158,41 +159,5 @@ impl Command for SpawnSnakeSegment {
             world.get_resource_mut::<Snake>().unwrap();
 
         snake.segments.push_front(entity);
-    }
-}
-
-pub struct SpawnApple {
-    pub position: Position,
-}
-
-impl Command for SpawnApple {
-    fn apply(self, world: &mut World) {
-        let board = world.get_resource::<Board>().unwrap();
-        let x = board
-            .cell_position_to_physical(self.position.x);
-        let y = board
-            .cell_position_to_physical(self.position.y);
-
-        let apple = world
-            .get_resource::<ImageAssets>()
-            .unwrap()
-            .apple
-            .clone();
-
-        world.spawn((
-            SpriteBundle {
-                sprite: Sprite {
-                    custom_size: Some(Vec2::splat(
-                        TILE_SIZE,
-                    )),
-                    ..default()
-                },
-                texture: apple,
-                transform: Transform::from_xyz(x, y, 2.0),
-                ..default()
-            },
-            self.position,
-            Food,
-        ));
     }
 }
