@@ -34,7 +34,6 @@ pub fn tick(
     positions: Query<(Entity, &Position), Without<Food>>,
     input: Res<controls::Direction>,
     query_food: Query<(Entity, &Position), With<Food>>,
-    mut food_events: EventWriter<NewFoodEvent>,
     board: Res<Board>,
     sounds: Res<AudioAssets>,
     mut next_state: ResMut<NextState<GameState>>,
@@ -99,7 +98,7 @@ pub fn tick(
             commands
                 .entity(food_entity)
                 .despawn_recursive();
-            food_events.send(NewFoodEvent);
+            commands.trigger(NewFoodEvent);
             commands.spawn(AudioBundle {
                 source: sounds.apple.clone(),
                 ..default()
@@ -118,7 +117,6 @@ pub fn reset_game(
     mut snake: ResMut<Snake>,
     positions: Query<Entity, With<Position>>,
     mut last_pressed: ResMut<controls::Direction>,
-    mut food_events: EventWriter<NewFoodEvent>,
 ) {
     for entity in positions.iter() {
         commands.entity(entity).despawn_recursive();
@@ -135,7 +133,7 @@ pub fn reset_game(
         }
     });
 
-    food_events.send(NewFoodEvent);
+    commands.trigger(NewFoodEvent);
     *snake = Default::default();
     *last_pressed = Default::default();
 }

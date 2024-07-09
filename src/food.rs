@@ -1,20 +1,14 @@
 use bevy::prelude::*;
 use rand::prelude::SliceRandom;
 
-use crate::{
-    board::{position::Position, Board, SpawnApple},
-    GameState,
-};
+use crate::board::{position::Position, Board, SpawnApple};
 
 pub struct FoodPlugin;
 
 impl Plugin for FoodPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<NewFoodEvent>().add_systems(
-            Update,
-            food_event_listener
-                .run_if(in_state(GameState::Playing)),
-        );
+        app.add_event::<NewFoodEvent>()
+            .observe(food_event_listener);
     }
 }
 #[derive(Event)]
@@ -24,9 +18,9 @@ pub struct NewFoodEvent;
 pub struct Food;
 
 pub fn food_event_listener(
+    _trigger: Trigger<NewFoodEvent>,
     mut commands: Commands,
     board: Res<Board>,
-    mut events: EventReader<NewFoodEvent>,
     positions: Query<&Position>,
 ) {
     let possible_food_locations = board
@@ -36,12 +30,12 @@ pub fn food_event_listener(
         })
         .collect::<Vec<Position>>();
 
-    let num_food = events.read().count();
-
     let mut rng = rand::thread_rng();
-    for pos in possible_food_locations
-        .choose_multiple(&mut rng, num_food)
+    if let Some(pos) =
+        possible_food_locations.choose(&mut rng)
     {
         commands.add(SpawnApple { position: *pos });
+    } else {
+        error!("can't find valid apple spawning space");
     }
 }
