@@ -7,10 +7,7 @@ use bevy::{
 };
 use itertools::Itertools;
 
-use crate::{
-    board::position::{Position, RelativePosition},
-    settings::GameSettings,
-};
+use crate::board::position::{Position, RelativePosition};
 
 #[derive(Debug, Default, Resource)]
 pub struct Snake {
@@ -24,11 +21,10 @@ pub fn render_snake_segments(
         &mut TextureAtlas,
         &mut Transform,
     )>,
-    settings: Res<GameSettings>,
 ) {
     use RelativePosition::*;
 
-    let snake_texture_index = settings.snake_index;
+    let snake_texture_index = 0;
 
     // head
     if let Some((first, second)) =

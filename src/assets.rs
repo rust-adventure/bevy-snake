@@ -13,10 +13,8 @@ impl Plugin for AssetsPlugin {
 
 #[derive(AssetCollection, Resource)]
 pub struct FontAssets {
-    #[asset(path = "AlfaSlabOne-Regular.ttf")]
-    pub alfa_slab_one_regular: Handle<Font>,
-    #[asset(path = "roboto.ttf")]
-    pub roboto: Handle<Font>,
+    #[asset(path = "Outfit-Black.ttf")]
+    pub outfit: Handle<Font>,
 }
 
 #[derive(AssetCollection, Resource)]
@@ -33,10 +31,6 @@ pub struct AudioAssets {
 pub struct ImageAssets {
     #[asset(path = "apple.png")]
     pub apple: Handle<Image>,
-    #[asset(path = "grey_box.png")]
-    pub box_unchecked: Handle<Image>,
-    #[asset(path = "green_boxCheckmark.png")]
-    pub box_checked: Handle<Image>,
     #[asset(texture_atlas(
         tile_size_x = 16.,
         tile_size_y = 16.,

@@ -1,10 +1,8 @@
-use assets::AudioAssets;
+use assets::{AudioAssets, FontAssets};
 use bevy::prelude::*;
 use board::{position::Position, Board, SpawnSnakeSegment};
 use controls::Direction::*;
 use food::{Food, NewFoodEvent};
-use scoring::Score;
-use settings::{AudioSettings, GameSettings};
 use snake::Snake;
 
 pub mod assets;
@@ -12,10 +10,7 @@ pub mod board;
 pub mod colors;
 pub mod controls;
 pub mod food;
-pub mod scoring;
-pub mod settings;
 pub mod snake;
-pub mod ui;
 
 #[derive(
     Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States,
@@ -42,8 +37,6 @@ pub fn tick(
     mut food_events: EventWriter<NewFoodEvent>,
     board: Res<Board>,
     sounds: Res<AudioAssets>,
-    settings: Res<GameSettings>,
-    mut score: ResMut<Score>,
     mut next_state: ResMut<NextState<GameState>>,
 ) {
     let mut next_position = *positions.get(snake.segments[0])
@@ -83,12 +76,10 @@ pub fn tick(
     // main menu
     if hit_wall.or(hit_self).or(has_won).is_some() {
         next_state.set(GameState::Menu);
-        if settings.audio == AudioSettings::ON {
-            commands.spawn(AudioBundle {
-                source: sounds.gameover.clone(),
-                ..default()
-            });
-        }
+        commands.spawn(AudioBundle {
+            source: sounds.gameover.clone(),
+            ..default()
+        });
         return;
     }
 
@@ -109,13 +100,10 @@ pub fn tick(
                 .entity(food_entity)
                 .despawn_recursive();
             food_events.send(NewFoodEvent);
-            score.score += 1;
-            if settings.audio == AudioSettings::ON {
-                commands.spawn(AudioBundle {
-                    source: sounds.apple.clone(),
-                    ..default()
-                });
-            }
+            commands.spawn(AudioBundle {
+                source: sounds.apple.clone(),
+                ..default()
+            });
         }
         None => {
             let old_tail =
@@ -131,7 +119,6 @@ pub fn reset_game(
     positions: Query<Entity, With<Position>>,
     mut last_pressed: ResMut<controls::Direction>,
     mut food_events: EventWriter<NewFoodEvent>,
-    mut score: ResMut<Score>,
 ) {
     for entity in positions.iter() {
         commands.entity(entity).despawn_recursive();
@@ -151,5 +138,58 @@ pub fn reset_game(
     food_events.send(NewFoodEvent);
     *snake = Default::default();
     *last_pressed = Default::default();
-    *score = Default::default();
+}
+
+pub fn spawn_menu(
+    mut commands: Commands,
+    fonts: Res<FontAssets>,
+) {
+    commands
+        .spawn(ButtonBundle {
+            style: Style {
+                width: Val::Percent(100.0),
+                height: Val::Px(65.0),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                ..default()
+            },
+            ..default()
+        })
+        .with_children(|parent| {
+            parent.spawn(TextBundle::from_section(
+                "New Game",
+                TextStyle {
+                    font: fonts.outfit.clone(),
+                    font_size: 40.0,
+                    color: Color::rgb(0.1, 0.1, 0.1),
+                },
+            ));
+        });
+}
+
+const NORMAL_BUTTON: Color = Color::rgb(0.95, 0.95, 0.95);
+const HOVERED_BUTTON: Color = Color::rgb(0.85, 0.85, 0.85);
+const PRESSED_BUTTON: Color = Color::rgb(0.75, 0.75, 0.75);
+
+pub fn button_system(
+    mut interaction_query: Query<
+        (&Interaction, &mut BackgroundColor),
+        (Changed<Interaction>, With<Button>),
+    >,
+    mut next_state: ResMut<NextState<GameState>>,
+) {
+    for (interaction, mut color) in &mut interaction_query {
+        match *interaction {
+            Interaction::Pressed => {
+                *color = PRESSED_BUTTON.into();
+                next_state.set(GameState::Playing);
+            }
+            Interaction::Hovered => {
+                *color = HOVERED_BUTTON.into();
+            }
+            Interaction::None => {
+                *color = NORMAL_BUTTON.into();
+            }
+        }
+    }
 }

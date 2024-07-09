@@ -2,15 +2,12 @@ use bevy::prelude::*;
 use snake::{
     assets::AssetsPlugin,
     board::{spawn_board, Board},
+    button_system,
     controls::ControlsPlugin,
     food::FoodPlugin,
     reset_game,
-    scoring::ScorePlugin,
-    settings::SettingsPlugin,
     snake::{render_snake_segments, Snake},
-    tick,
-    ui::UiPlugin,
-    GameState,
+    spawn_menu, tick, GameState,
 };
 
 fn main() {
@@ -33,14 +30,11 @@ fn main() {
             tick.run_if(in_state(GameState::Playing)),
         )
         .add_plugins((
-            SettingsPlugin,
             ControlsPlugin,
             FoodPlugin,
             AssetsPlugin,
-            UiPlugin,
         ))
         .init_resource::<Snake>()
-        .add_plugins(ScorePlugin)
         .add_systems(Startup, (setup, spawn_board))
         .add_systems(
             Update,
@@ -50,6 +44,11 @@ fn main() {
         .add_systems(
             OnEnter(GameState::Playing),
             reset_game,
+        )
+        .add_systems(OnEnter(GameState::Menu), spawn_menu)
+        .add_systems(
+            Update,
+            button_system.run_if(in_state(GameState::Menu)),
         )
         .run();
 }
