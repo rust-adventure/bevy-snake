@@ -81,8 +81,8 @@ pub fn tick(
         .cartesian_product(0..(tilemap_size.y as i32))
         .all(|pos| {
             pos != (
-                next_position.x as i32,
-                next_position.y as i32,
+                next_position.x,
+                next_position.y,
             )
         })
         .then_some(GameOverReason::HitWall);
