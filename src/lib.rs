@@ -1,9 +1,11 @@
 use assets::{AudioAssets, FontAssets};
 use bevy::prelude::*;
-use board::{position::Position, Board};
+use bevy_ecs_tilemap::{map::TilemapSize, tiles::TilePos};
+use board::SnakeLayer;
 use controls::Direction::*;
 use food::{Food, NewFoodEvent};
-use snake::{Snake, SpawnSnakeSegmentEvent};
+use itertools::Itertools;
+use snake::{Snake, SnakeSegment, SpawnSnakeSegmentEvent};
 
 pub mod assets;
 pub mod board;
@@ -32,15 +34,33 @@ enum GameOverReason {
 pub fn tick(
     mut commands: Commands,
     mut snake: ResMut<Snake>,
-    positions: Query<(Entity, &Position), Without<Food>>,
+    positions: Query<
+        &TilePos,
+        (Without<Food>, With<SnakeSegment>),
+    >,
     input: Res<controls::Direction>,
-    query_food: Query<(Entity, &Position), With<Food>>,
-    board: Res<Board>,
+    query_food: Query<
+        (Entity, &TilePos),
+        (With<Food>, Without<SnakeSegment>),
+    >,
     sounds: Res<AudioAssets>,
     mut next_state: ResMut<NextState<GameState>>,
+    tilemap: Query<&TilemapSize, With<SnakeLayer>>,
 ) {
-    let mut next_position = *positions.get(snake.segments[0])
-    .expect("expect stored entities in a snake to have Position components associated with them").1;
+    let Ok(tilemap_size) = tilemap.get_single() else {
+        error!(
+            "expected a tilemap with TilemapSize to exist"
+        );
+        return;
+    };
+
+    let next_position = *positions.get(snake.segments[0])
+    .expect("expect stored entities in a snake to have Position components associated with them");
+
+    let mut next_position = IVec2::new(
+        next_position.x as i32,
+        next_position.y as i32,
+    );
 
     match *input {
         Up => {
@@ -57,20 +77,29 @@ pub fn tick(
         }
     };
 
-    let hit_wall = board
-        .tiles()
-        .all(|pos| pos != next_position)
+    let hit_wall = (0..(tilemap_size.x as i32))
+        .cartesian_product(0..(tilemap_size.y as i32))
+        .all(|pos| {
+            pos != (
+                next_position.x as i32,
+                next_position.y as i32,
+            )
+        })
         .then_some(GameOverReason::HitWall);
 
+    let next_position = TilePos {
+        x: next_position.x as u32,
+        y: next_position.y as u32,
+    };
     // did the snake hit itself?
     let hit_self = positions
         .iter()
-        .find(|(_, pos)| pos == &&next_position)
+        .find(|pos| pos == &&next_position)
         .map(|_| GameOverReason::HitSnake);
 
     let has_won = (snake.segments.len()
-        == (board.size as usize).pow(2))
-    .then_some(GameOverReason::Win);
+        == (tilemap_size.x * tilemap_size.y) as usize)
+        .then_some(GameOverReason::Win);
 
     // if the game is over, stop processing and go to
     // main menu
@@ -116,7 +145,13 @@ pub fn tick(
 pub fn reset_game(
     mut commands: Commands,
     mut snake: ResMut<Snake>,
-    positions: Query<Entity, With<Position>>,
+    positions: Query<
+        Entity,
+        (
+            With<TilePos>,
+            Or<(With<SnakeSegment>, With<Food>)>,
+        ),
+    >,
     mut last_pressed: ResMut<controls::Direction>,
 ) {
     for entity in positions.iter() {
@@ -125,12 +160,12 @@ pub fn reset_game(
 
     commands.trigger({
         SpawnSnakeSegmentEvent {
-            position: Position::new(3, 4),
+            position: TilePos::new(3, 4),
         }
     });
     commands.trigger({
         SpawnSnakeSegmentEvent {
-            position: Position::new(4, 4),
+            position: TilePos::new(4, 4),
         }
     });
 

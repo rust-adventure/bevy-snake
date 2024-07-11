@@ -1,109 +1,129 @@
 use bevy::prelude::*;
-use itertools::Itertools;
+use bevy_ecs_tilemap::prelude::*;
 use rand::{
     distributions::WeightedIndex, prelude::Distribution,
 };
-pub mod position;
-use position::*;
 
-use crate::{assets::ImageAssets, colors};
+use crate::assets::ImageAssets;
 
-pub const TILE_SIZE: f32 = 30.0;
-pub const TILE_SPACER: f32 = 0.0;
-
-#[derive(Resource)]
-pub struct Board {
-    pub size: u16,
-    physical_size: f32,
-}
-
-impl Board {
-    pub fn new(size: u16) -> Self {
-        let physical_size = f32::from(size) * TILE_SIZE
-            + f32::from(size + 1) * TILE_SPACER;
-        Board {
-            size,
-            physical_size,
-        }
-    }
-    pub fn cell_position_to_physical(
-        &self,
-        pos: i32,
-    ) -> f32 {
-        let offset =
-            -self.physical_size / 2.0 + 0.5 * TILE_SIZE;
-
-        offset
-            + pos as f32 * TILE_SIZE
-            + (pos + 1) as f32 * TILE_SPACER
-    }
-    pub fn low_edge(&self) -> f32 {
-        -self.physical_size / 2.0
-    }
-    pub fn high_edge(&self) -> f32 {
-        self.physical_size / 2.0
-    }
-    pub fn tiles(&self) -> impl Iterator<Item = Position> {
-        (0..self.size).cartesian_product(0..self.size).map(
-            |(x, y)| {
-                Position(IVec2::new(
-                    i32::from(x),
-                    i32::from(y),
-                ))
-            },
-        )
-    }
-}
+#[derive(Component)]
+pub struct SnakeLayer;
 
 pub fn spawn_board(
     mut commands: Commands,
     images: Res<ImageAssets>,
-    board: Res<Board>,
 ) {
     let mut rng = rand::thread_rng();
     let weights = vec![3, 3, 1];
     let dist = WeightedIndex::new(weights).unwrap();
 
-    commands
-        .spawn(SpriteBundle {
-            sprite: Sprite {
-                color: colors::BOARD,
-                custom_size: Some(Vec2::splat(
-                    board.physical_size,
-                )),
-                ..default()
-            },
-            ..default()
-        })
-        .with_children(|builder| {
-            for pos in board.tiles() {
-                builder.spawn((
-                    SpriteBundle {
-                        texture: images.grass.clone(),
-                        sprite: Sprite {
-                            custom_size: Some(Vec2::splat(
-                                TILE_SIZE,
-                            )),
-                            ..default()
-                        },
-                        transform: Transform::from_xyz(
-                            board
-                                .cell_position_to_physical(
-                                    pos.x,
-                                ),
-                            board
-                                .cell_position_to_physical(
-                                    pos.y,
-                                ),
-                            1.0,
-                        ),
-                        ..default()
-                    },
-                    TextureAtlas {
-                        layout: images.grass_layout.clone(),
-                        index: dist.sample(&mut rng),
-                    },
-                ));
-            }
-        });
+    let map_size = TilemapSize { x: 20, y: 20 };
+
+    // Create a tilemap entity a little early.
+    // We want this entity early because we need to tell each tile which tilemap entity
+    // it is associated with. This is done with the TilemapId component on each tile.
+    // Eventually, we will insert the `TilemapBundle` bundle on the entity, which
+    // will contain various necessary components, such as `TileStorage`.
+    let tilemap_entity = commands.spawn_empty().id();
+
+    // To begin creating the map we will need a `TileStorage` component.
+    // This component is a grid of tile entities and is used to help keep track of individual
+    // tiles in the world. If you have multiple layers of tiles you would have a tilemap entity
+    // per layer, each with their own `TileStorage` component.
+    let mut tile_storage = TileStorage::empty(map_size);
+
+    // Spawn the elements of the tilemap.
+    // Alternatively, you can use helpers::filling::fill_tilemap.
+    for x in 0..map_size.x {
+        for y in 0..map_size.y {
+            let tile_pos = TilePos { x, y };
+            let tile_entity = commands
+                .spawn(TileBundle {
+                    position: tile_pos,
+                    tilemap_id: TilemapId(tilemap_entity),
+                    texture_index: TileTextureIndex(
+                        dist.sample(&mut rng) as u32,
+                    ),
+                    ..Default::default()
+                })
+                .id();
+            tile_storage.set(&tile_pos, tile_entity);
+        }
+    }
+
+    let tile_size = TilemapTileSize { x: 136., y: 136. };
+    let grid_size = tile_size.into();
+    let map_type = TilemapType::default();
+
+    commands.entity(tilemap_entity).insert(TilemapBundle {
+        grid_size,
+        map_type,
+        size: map_size,
+        storage: tile_storage,
+        texture: TilemapTexture::Single(
+            images.grass.clone(),
+        ),
+        tile_size,
+        transform: get_tilemap_center_transform(
+            &map_size, &grid_size, &map_type, 0.0,
+        ),
+        ..Default::default()
+    });
+
+    ///
+    ///snake tiles
+    ///
+    // Create a tilemap entity a little early.
+    // We want this entity early because we need to tell each tile which tilemap entity
+    // it is associated with. This is done with the TilemapId component on each tile.
+    // Eventually, we will insert the `TilemapBundle` bundle on the entity, which
+    // will contain various necessary components, such as `TileStorage`.
+    let tilemap_entity = commands.spawn_empty().id();
+
+    // To begin creating the map we will need a `TileStorage` component.
+    // This component is a grid of tile entities and is used to help keep track of individual
+    // tiles in the world. If you have multiple layers of tiles you would have a tilemap entity
+    // per layer, each with their own `TileStorage` component.
+    let mut tile_storage = TileStorage::empty(map_size);
+
+    // Spawn the elements of the tilemap.
+    // Alternatively, you can use helpers::filling::fill_tilemap.
+    // for x in 0..map_size.x {
+    //     for y in 0..map_size.y {
+    //         let tile_pos = TilePos { x, y };
+    //         let tile_entity = commands
+    //             .spawn(TileBundle {
+    //                 position: tile_pos,
+    //                 tilemap_id: TilemapId(tilemap_entity),
+    //                 texture_index: TileTextureIndex(
+    //                     dist.sample(&mut rng) as u32,
+    //                 ),
+    //                 ..Default::default()
+    //             })
+    //             .id();
+    //         tile_storage.set(&tile_pos, tile_entity);
+    //     }
+    // }
+
+    let tile_size = TilemapTileSize { x: 136.0, y: 136.0 };
+    let grid_size = tile_size.into();
+    let map_type = TilemapType::default();
+
+    commands.entity(tilemap_entity).insert((
+        TilemapBundle {
+            grid_size,
+            map_type,
+            size: map_size,
+            storage: tile_storage,
+            texture: TilemapTexture::Single(
+                images.snake.clone(),
+            ),
+            tile_size,
+            transform: get_tilemap_center_transform(
+                &map_size, &grid_size, &map_type, 1.0,
+            ),
+            ..Default::default()
+        },
+        SnakeLayer,
+    ));
 }

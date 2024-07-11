@@ -2,31 +2,34 @@ use std::collections::VecDeque;
 
 use bevy::{
     app::{Plugin, Update},
-    math::{Quat, Vec2},
+    hierarchy::BuildChildren,
     prelude::{
-        default, Commands, Entity, Event,
+        default, Commands, Component, Entity, Event,
         IntoSystemConfigs, Query, Res, ResMut, Resource,
-        Transform, Trigger,
+        Trigger, With,
     },
-    sprite::{Sprite, SpriteBundle, TextureAtlas},
     state::condition::in_state,
+};
+use bevy_ecs_tilemap::{
+    map::TilemapId,
+    tiles::{
+        TileBundle, TileFlip, TilePos, TileStorage,
+        TileTextureIndex,
+    },
 };
 use itertools::Itertools;
 
-use crate::{
-    assets::ImageAssets,
-    board::{
-        position::{Position, RelativePosition},
-        Board, TILE_SIZE,
-    },
-    GameState,
-};
+use crate::{board::SnakeLayer, GameState};
+
+mod position;
+use position::*;
 
 pub struct SnakePlugin;
 
 impl Plugin for SnakePlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_event::<SpawnSnakeSegmentEvent>()
+            .insert_resource(SnakeHeadTextureIndex(8))
             .init_resource::<Snake>()
             .add_systems(
                 Update,
@@ -37,22 +40,51 @@ impl Plugin for SnakePlugin {
     }
 }
 
+#[derive(Resource)]
+struct SnakeHeadTextureIndex(u32);
+
+#[derive(Component, Debug)]
+pub struct SnakeSegment;
+
 #[derive(Debug, Default, Resource)]
 pub struct Snake {
     pub segments: VecDeque<Entity>,
 }
 
-pub fn render_snake_segments(
+fn detect_side(
+    first: &TilePos,
+    other: &TilePos,
+) -> RelativePosition {
+    if other.y > first.y {
+        RelativePosition::North
+    } else if other.y < first.y {
+        RelativePosition::South
+    } else if other.x > first.x {
+        RelativePosition::East
+    } else if other.x < first.x {
+        RelativePosition::West
+    } else {
+        panic!("should never happen");
+    }
+}
+
+fn render_snake_segments(
     snake: Res<Snake>,
-    mut positions: Query<(
-        &Position,
-        &mut TextureAtlas,
-        &mut Transform,
-    )>,
+    mut positions: Query<
+        (
+            &TilePos,
+            &mut TileTextureIndex,
+            &mut TileFlip,
+        ),
+        With<SnakeSegment>,
+    >,
+    mut tilemap: Query<
+        (Entity, &mut TileStorage),
+        With<SnakeLayer>,
+    >,
+    snake_texture_index: Res<SnakeHeadTextureIndex>,
 ) {
     use RelativePosition::*;
-
-    let snake_texture_index = 0;
 
     // head
     if let Some((first, second)) =
@@ -60,12 +92,12 @@ pub fn render_snake_segments(
     {
         let pos = positions.get(*first).unwrap().0;
         let pos_second = positions.get(*second).unwrap().0;
-        let rotation =
-            Quat::from(pos.detect_side(pos_second));
-        let (_, mut sprite, mut transform) =
+        let flip =
+            TileFlip::from(detect_side(pos, pos_second));
+        let (_, mut sprite, mut tile_flip) =
             positions.get_mut(*first).unwrap();
-        sprite.index = snake_texture_index;
-        transform.rotation = rotation;
+        sprite.0 = snake_texture_index.0;
+        *tile_flip = flip;
     }
 
     // tail
@@ -76,13 +108,15 @@ pub fn render_snake_segments(
         let second_to_last_pos =
             positions.get(*second_to_last).unwrap().0;
 
-        let rotation =
-            Quat::from(pos.detect_side(second_to_last_pos));
+        let flip = TileFlip::from(detect_side(
+            pos,
+            second_to_last_pos,
+        ));
 
-        let (_, mut sprite, mut transform) =
+        let (_, mut sprite, mut tile_flip) =
             positions.get_mut(*last).unwrap();
-        sprite.index = snake_texture_index + 3;
-        transform.rotation = rotation;
+        sprite.0 = snake_texture_index.0 + 3;
+        *tile_flip = flip
     }
 
     for (front, origin, back) in
@@ -93,90 +127,100 @@ pub fn render_snake_segments(
         let back_pos = positions.get(*back).unwrap().0;
 
         let image = match (
-            origin_pos.detect_side(front_pos),
-            origin_pos.detect_side(back_pos),
+            detect_side(origin_pos, front_pos),
+            detect_side(origin_pos, back_pos),
         ) {
             // vertical
             (South, North) | (North, South) => (
-                snake_texture_index + 1,
-                Quat::from_rotation_z(0.0),
+                snake_texture_index.0 + 1,
+                TileFlip::default(),
             ),
             // horizontal
             (East, West) | (West, East) => (
-                snake_texture_index + 1,
-                Quat::from_rotation_z(
-                    std::f32::consts::FRAC_PI_2,
-                ),
+                snake_texture_index.0 + 1,
+                TileFlip {
+                    d: true,
+                    ..default()
+                },
             ),
             // ⌞
             (North, East) | (East, North) => (
-                snake_texture_index + 2,
-                Quat::from_rotation_z(
-                    std::f32::consts::FRAC_PI_2,
-                ),
+                snake_texture_index.0 + 2,
+                TileFlip {
+                    d: true,
+                    y: true,
+                    ..default()
+                },
             ),
             // ⌜
             (East, South) | (South, East) => (
-                snake_texture_index + 2,
-                Quat::from_rotation_z(0.0),
+                snake_texture_index.0 + 2,
+                TileFlip {
+                    d: true,
+                    ..default()
+                },
             ),
             // ⌟
             (West, North) | (North, West) => (
-                snake_texture_index + 2,
-                Quat::from_rotation_z(std::f32::consts::PI),
+                snake_texture_index.0 + 2,
+                TileFlip {
+                    y: true,
+                    x: true,
+                    ..default()
+                },
             ),
             // ⌝
             (West, South) | (South, West) => (
-                snake_texture_index + 2,
-                Quat::from_rotation_z(
-                    -std::f32::consts::FRAC_PI_2,
-                ),
+                snake_texture_index.0 + 2,
+                TileFlip {
+                    d: true,
+                    x: true,
+                    ..default()
+                },
             ),
             _ => panic!("unhandled"),
         };
 
-        let (_, mut sprite, mut transform) =
+        let (_, mut sprite, mut tile_flip) =
             positions.get_mut(*origin).unwrap();
-        sprite.index = image.0;
-        transform.rotation = image.1;
+        sprite.0 = image.0;
+        *tile_flip = image.1;
     }
 }
 
 #[derive(Event)]
 pub struct SpawnSnakeSegmentEvent {
-    pub position: Position,
+    pub position: TilePos,
 }
 fn spawn_snake_segment(
     trigger: Trigger<SpawnSnakeSegmentEvent>,
     mut commands: Commands,
-    board: Res<Board>,
-    image_assets: Res<ImageAssets>,
     mut snake: ResMut<Snake>,
+    mut tilemap: Query<
+        (Entity, &mut TileStorage),
+        With<SnakeLayer>,
+    >,
+    snake_texture_index: Res<SnakeHeadTextureIndex>,
 ) {
-    let position = trigger.event().position;
-    let x = board.cell_position_to_physical(position.x);
-    let y = board.cell_position_to_physical(position.y);
+    let (tilemap_entity, mut tile_storage) =
+        tilemap.single_mut();
 
-    let entity = commands
+    let tile_pos = trigger.event().position;
+
+    let tile_entity = commands
         .spawn((
-            SpriteBundle {
-                texture: image_assets.snake.clone(),
-                sprite: Sprite {
-                    custom_size: Some(Vec2::splat(
-                        TILE_SIZE,
-                    )),
-                    ..default()
-                },
-                transform: Transform::from_xyz(x, y, 2.0),
-                ..default()
+            TileBundle {
+                position: tile_pos,
+                tilemap_id: TilemapId(tilemap_entity),
+                texture_index: TileTextureIndex(
+                    snake_texture_index.0,
+                ),
+                ..Default::default()
             },
-            TextureAtlas {
-                index: 8,
-                layout: image_assets.snake_layout.clone(),
-            },
-            position,
+            SnakeSegment,
         ))
         .id();
+    tile_storage.set(&tile_pos, tile_entity);
 
-    snake.segments.push_front(entity);
+    snake.segments.push_front(tile_entity);
 }

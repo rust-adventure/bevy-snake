@@ -1,19 +1,23 @@
 use bevy::prelude::*;
+use bevy_ecs_tilemap::{
+    map::{TilemapId, TilemapSize},
+    tiles::{
+        TileBundle, TilePos, TileStorage, TileTextureIndex,
+    },
+};
+use itertools::Itertools;
 use rand::prelude::SliceRandom;
 
-use crate::{
-    assets::ImageAssets,
-    board::{position::Position, Board, TILE_SIZE},
-};
+use crate::{board::SnakeLayer, snake::SnakeSegment};
 
 pub struct FoodPlugin;
 
 impl Plugin for FoodPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<NewFoodEvent>()
-            .add_event::<SpawnApple>()
-            .observe(food_event_listener)
-            .observe(spawn_apples);
+            .add_event::<SpawnAppleEvent>()
+            .observe(new_food_event_triggers)
+            .observe(spawn_apple_event_triggers);
     }
 }
 #[derive(Event)]
@@ -22,54 +26,68 @@ pub struct NewFoodEvent;
 #[derive(Component)]
 pub struct Food;
 
-pub fn food_event_listener(
+pub fn new_food_event_triggers(
     _trigger: Trigger<NewFoodEvent>,
     mut commands: Commands,
-    board: Res<Board>,
-    positions: Query<&Position>,
+    positions: Query<
+        &TilePos,
+        Or<(With<SnakeSegment>, With<Food>)>,
+    >,
+
+    tilemap: Query<&TilemapSize, With<SnakeLayer>>,
 ) {
-    let possible_food_locations = board
-        .tiles()
+    let map = tilemap.single();
+
+    let possible_food_locations = (0..(map.x as i32))
+        .cartesian_product(0..(map.y as i32))
         .filter(|tile| {
-            !positions.iter().any(|pos| pos == tile)
+            !positions.iter().any(|pos| {
+                (pos.x, pos.y)
+                    == (tile.0 as u32, tile.1 as u32)
+            })
         })
-        .collect::<Vec<Position>>();
+        .collect::<Vec<(i32, i32)>>();
 
     let mut rng = rand::thread_rng();
-    if let Some(pos) =
+    let Some(pos) =
         possible_food_locations.choose(&mut rng)
-    {
-        commands.trigger(SpawnApple { position: *pos });
-    } else {
+    else {
         error!("can't find valid apple spawning space");
-    }
+        return;
+    };
+
+    commands.trigger(SpawnAppleEvent {
+        position: TilePos::new(pos.0 as u32, pos.1 as u32),
+    });
 }
 
 #[derive(Event)]
-struct SpawnApple {
-    position: Position,
+struct SpawnAppleEvent {
+    position: TilePos,
 }
-fn spawn_apples(
-    trigger: Trigger<SpawnApple>,
+fn spawn_apple_event_triggers(
+    trigger: Trigger<SpawnAppleEvent>,
     mut commands: Commands,
-    board: Res<Board>,
-    image_assets: Res<ImageAssets>,
+    mut tilemap: Query<
+        (Entity, &mut TileStorage),
+        With<SnakeLayer>,
+    >,
 ) {
-    let position = trigger.event().position;
-    let x = board.cell_position_to_physical(position.x);
-    let y = board.cell_position_to_physical(position.y);
+    let (tilemap_entity, mut tile_storage) =
+        tilemap.single_mut();
 
-    commands.spawn((
-        SpriteBundle {
-            sprite: Sprite {
-                custom_size: Some(Vec2::splat(TILE_SIZE)),
-                ..default()
+    let tile_pos = trigger.event().position;
+
+    let tile_entity = commands
+        .spawn((
+            TileBundle {
+                position: tile_pos,
+                tilemap_id: TilemapId(tilemap_entity),
+                texture_index: TileTextureIndex(116),
+                ..Default::default()
             },
-            texture: image_assets.apple.clone(),
-            transform: Transform::from_xyz(x, y, 2.0),
-            ..default()
-        },
-        position,
-        Food,
-    ));
+            Food,
+        ))
+        .id();
+    tile_storage.set(&tile_pos, tile_entity);
 }

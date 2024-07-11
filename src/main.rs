@@ -1,12 +1,14 @@
-use bevy::prelude::*;
+use std::time::Duration;
+
+use bevy::{
+    prelude::*, render::camera::ScalingMode,
+    time::common_conditions::on_timer,
+};
+use bevy_ecs_tilemap::TilemapPlugin;
 use snake::{
-    assets::AssetsPlugin,
-    board::{spawn_board, Board},
-    button_system,
-    controls::ControlsPlugin,
-    food::FoodPlugin,
-    reset_game,
-    snake::SnakePlugin,
+    assets::AssetsPlugin, board::spawn_board,
+    button_system, controls::ControlsPlugin,
+    food::FoodPlugin, reset_game, snake::SnakePlugin,
     spawn_menu, tick, GameState,
 };
 
@@ -15,19 +17,23 @@ fn main() {
         .insert_resource(ClearColor(Color::srgb(
             0.52, 0.73, 0.17,
         )))
-        .add_plugins(DefaultPlugins.set(WindowPlugin {
-            primary_window: Some(Window {
-                title: "Snake!".into(),
+        .add_plugins((
+            DefaultPlugins.set(WindowPlugin {
+                primary_window: Some(Window {
+                    title: "Snake!".into(),
+                    ..default()
+                }),
                 ..default()
             }),
-            ..default()
-        }))
-        .insert_resource(Board::new(20))
+            TilemapPlugin,
+        ))
         .init_state::<GameState>()
-        .insert_resource(Time::<Fixed>::from_seconds(0.1))
         .add_systems(
-            FixedUpdate,
-            tick.run_if(in_state(GameState::Playing)),
+            Update,
+            tick.run_if(in_state(GameState::Playing))
+                .run_if(on_timer(Duration::from_secs_f32(
+                    0.1,
+                ))),
         )
         .add_plugins((
             ControlsPlugin,
@@ -37,7 +43,12 @@ fn main() {
         ))
         .add_systems(
             OnEnter(GameState::Startup),
-            (setup, spawn_board, start_menu).chain(),
+            (
+                setup,
+                spawn_board,
+                transition_to_start_menu,
+            )
+                .chain(),
         )
         .add_systems(
             OnEnter(GameState::Playing),
@@ -52,12 +63,23 @@ fn main() {
         .run();
 }
 
-fn start_menu(
+fn transition_to_start_menu(
     mut next_state: ResMut<NextState<GameState>>,
 ) {
     next_state.set(GameState::Menu);
 }
 
 fn setup(mut commands: Commands) {
-    commands.spawn(Camera2dBundle::default());
+    commands.spawn(Camera2dBundle {
+        projection: OrthographicProjection {
+            scaling_mode: ScalingMode::AutoMin {
+                min_width: (20. + 4.) * 136.,
+                min_height: (20. + 4.) * 136.,
+            },
+            far: 1000.,
+            near: -1000.,
+            ..default()
+        },
+        ..default()
+    });
 }

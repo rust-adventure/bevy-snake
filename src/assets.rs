@@ -32,8 +32,8 @@ pub struct ImageAssets {
     #[asset(path = "apple.png")]
     pub apple: Handle<Image>,
     #[asset(texture_atlas(
-        tile_size_x = 16,
-        tile_size_y = 16,
+        tile_size_x = 136,
+        tile_size_y = 136,
         columns = 3,
         rows = 1,
         padding_x = 0,
