@@ -65,6 +65,7 @@ pub fn new_food_event_triggers(
 struct SpawnAppleEvent {
     position: TilePos,
 }
+
 fn spawn_apple_event_triggers(
     trigger: Trigger<SpawnAppleEvent>,
     mut commands: Commands,

@@ -2,7 +2,6 @@ use std::collections::VecDeque;
 
 use bevy::{
     app::{Plugin, Update},
-    hierarchy::BuildChildren,
     prelude::{
         default, Commands, Component, Entity, Event,
         IntoSystemConfigs, Query, Res, ResMut, Resource,
@@ -19,7 +18,7 @@ use bevy_ecs_tilemap::{
 };
 use itertools::Itertools;
 
-use crate::{board::SnakeLayer, GameState};
+use crate::{board::SnakeLayer, tick, GameState};
 
 mod position;
 use position::*;
@@ -34,6 +33,7 @@ impl Plugin for SnakePlugin {
             .add_systems(
                 Update,
                 render_snake_segments
+                    .after(tick)
                     .run_if(in_state(GameState::Playing)),
             )
             .observe(spawn_snake_segment);
@@ -77,10 +77,6 @@ fn render_snake_segments(
             &mut TileFlip,
         ),
         With<SnakeSegment>,
-    >,
-    mut tilemap: Query<
-        (Entity, &mut TileStorage),
-        With<SnakeLayer>,
     >,
     snake_texture_index: Res<SnakeHeadTextureIndex>,
 ) {
@@ -192,6 +188,7 @@ fn render_snake_segments(
 pub struct SpawnSnakeSegmentEvent {
     pub position: TilePos,
 }
+
 fn spawn_snake_segment(
     trigger: Trigger<SpawnSnakeSegmentEvent>,
     mut commands: Commands,
