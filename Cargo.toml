@@ -14,3 +14,7 @@ bevy_ecs_tilemap = { git = "https://github.com/StarArawn/bevy_ecs_tilemap.git", 
 
 [features]
 default = ["bevy_ecs_tilemap/atlas"]
+
+[lints.clippy]
+type_complexity = "allow"
+too_many_arguments = "allow"
