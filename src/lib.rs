@@ -1,6 +1,9 @@
 use assets::{AudioAssets, FontAssets};
 use bevy::prelude::*;
-use bevy_ecs_tilemap::{map::TilemapSize, tiles::TilePos};
+use bevy_ecs_tilemap::{
+    map::TilemapSize,
+    tiles::{TilePos, TileStorage},
+};
 use board::SnakeLayer;
 use controls::Direction::*;
 use food::{Food, NewFoodEvent};
@@ -45,11 +48,16 @@ pub fn tick(
     >,
     sounds: Res<AudioAssets>,
     mut next_state: ResMut<NextState<GameState>>,
-    tilemap: Query<&TilemapSize, With<SnakeLayer>>,
+    mut tilemap: Query<
+        (&TilemapSize, &mut TileStorage),
+        With<SnakeLayer>,
+    >,
 ) {
-    let Ok(tilemap_size) = tilemap.get_single() else {
+    let Ok((tilemap_size, mut tile_storage)) =
+        tilemap.get_single_mut()
+    else {
         error!(
-            "expected a tilemap with TilemapSize to exist"
+            "expected a tilemap with TilemapSize and TileStorage to exist"
         );
         return;
     };
@@ -80,10 +88,7 @@ pub fn tick(
     let hit_wall = (0..(tilemap_size.x as i32))
         .cartesian_product(0..(tilemap_size.y as i32))
         .all(|pos| {
-            pos != (
-                next_position.x,
-                next_position.y,
-            )
+            pos != (next_position.x, next_position.y)
         })
         .then_some(GameOverReason::HitWall);
 
@@ -124,10 +129,11 @@ pub fn tick(
         .iter()
         .find(|(_, pos)| &&next_position == pos);
     match is_food {
-        Some((food_entity, _)) => {
+        Some((food_entity, tile_pos)) => {
             commands
                 .entity(food_entity)
                 .despawn_recursive();
+            tile_storage.remove(tile_pos);
             commands.trigger(NewFoodEvent);
             commands.spawn(AudioBundle {
                 source: sounds.apple.clone(),
@@ -138,6 +144,9 @@ pub fn tick(
             let old_tail =
                 snake.segments.pop_back().unwrap();
             commands.entity(old_tail).despawn_recursive();
+            let old_tail_tile_pos =
+                positions.get(old_tail).unwrap();
+            tile_storage.remove(old_tail_tile_pos);
         }
     }
 }
@@ -153,8 +162,21 @@ pub fn reset_game(
         ),
     >,
     mut last_pressed: ResMut<controls::Direction>,
+    mut tile_storage: Query<
+        (&TilemapSize, &mut TileStorage),
+        With<SnakeLayer>,
+    >,
 ) {
-    for entity in positions.iter() {
+    let Ok((tilemap_size, mut tile_storage)) =
+        tile_storage.get_single_mut()
+    else {
+        error!(
+            "expected a tilemap with TileStorage to exist"
+        );
+        return;
+    };
+
+    for entity in &positions {
         commands.entity(entity).despawn_recursive();
     }
 
@@ -172,6 +194,7 @@ pub fn reset_game(
     commands.trigger(NewFoodEvent);
     *snake = Default::default();
     *last_pressed = Default::default();
+    *tile_storage = TileStorage::empty(*tilemap_size);
 }
 
 pub fn spawn_menu(
