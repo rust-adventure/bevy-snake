@@ -16,8 +16,8 @@ impl Plugin for FoodPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<NewFoodEvent>()
             .add_event::<SpawnAppleEvent>()
-            .observe(new_food_event_triggers)
-            .observe(spawn_apple_event_triggers);
+            .add_observer(new_food_event_triggers)
+            .add_observer(spawn_apple_event_triggers);
     }
 }
 #[derive(Event)]
@@ -34,10 +34,8 @@ pub fn new_food_event_triggers(
         Or<(With<SnakeSegment>, With<Food>)>,
     >,
 
-    tilemap: Query<&TilemapSize, With<SnakeLayer>>,
+    map: Single<&TilemapSize, With<SnakeLayer>>,
 ) {
-    let map = tilemap.single();
-
     let possible_food_locations = (0..(map.x as i32))
         .cartesian_product(0..(map.y as i32))
         .filter(|tile| {
@@ -69,13 +67,13 @@ struct SpawnAppleEvent {
 fn spawn_apple_event_triggers(
     trigger: Trigger<SpawnAppleEvent>,
     mut commands: Commands,
-    mut tilemap: Query<
+    tilemap: Single<
         (Entity, &mut TileStorage),
         With<SnakeLayer>,
     >,
 ) {
     let (tilemap_entity, mut tile_storage) =
-        tilemap.single_mut();
+        tilemap.into_inner();
 
     let tile_pos = trigger.event().position;
 

@@ -1,5 +1,4 @@
-use assets::{AudioAssets, FontAssets};
-use bevy::prelude::*;
+use bevy::{color::palettes::tailwind::*, prelude::*};
 use bevy_ecs_tilemap::{
     map::TilemapSize,
     tiles::{TilePos, TileStorage},
@@ -12,7 +11,6 @@ use snake::{Snake, SnakeSegment, SpawnSnakeSegmentEvent};
 
 pub mod assets;
 pub mod board;
-pub mod colors;
 pub mod controls;
 pub mod food;
 pub mod snake;
@@ -46,43 +44,28 @@ pub fn tick(
         (Entity, &TilePos),
         (With<Food>, Without<SnakeSegment>),
     >,
-    sounds: Res<AudioAssets>,
     mut next_state: ResMut<NextState<GameState>>,
-    mut tilemap: Query<
+    tilemap: Single<
         (&TilemapSize, &mut TileStorage),
         With<SnakeLayer>,
     >,
-) {
-    let Ok((tilemap_size, mut tile_storage)) =
-        tilemap.get_single_mut()
-    else {
-        error!(
-            "expected a tilemap with TilemapSize and TileStorage to exist"
-        );
-        return;
-    };
+) -> Result {
+    let (tilemap_size, mut tile_storage) =
+        tilemap.into_inner();
 
-    let next_position = *positions.get(snake.segments[0])
-    .expect("expect stored entities in a snake to have Position components associated with them");
+    let next_position = positions.get(snake.segments[0])
+        .map_err(|err| format!("stored entities in a snake must have `Position` components associated with them, {err}"))?;
 
     let mut next_position = IVec2::new(
         next_position.x as i32,
         next_position.y as i32,
     );
 
-    match *input {
-        Up => {
-            next_position.y += 1;
-        }
-        Down => {
-            next_position.y -= 1;
-        }
-        Right => {
-            next_position.x += 1;
-        }
-        Left => {
-            next_position.x -= 1;
-        }
+    next_position += match *input {
+        Up => IVec2::Y,
+        Down => IVec2::NEG_Y,
+        Right => IVec2::X,
+        Left => IVec2::NEG_X,
     };
 
     let hit_wall = (0..(tilemap_size.x as i32))
@@ -110,11 +93,7 @@ pub fn tick(
     // main menu
     if hit_wall.or(hit_self).or(has_won).is_some() {
         next_state.set(GameState::Menu);
-        commands.spawn(AudioBundle {
-            source: sounds.gameover.clone(),
-            ..default()
-        });
-        return;
+        return Ok(());
     }
 
     commands.trigger({
@@ -130,25 +109,22 @@ pub fn tick(
         .find(|(_, pos)| &&next_position == pos);
     match is_food {
         Some((food_entity, tile_pos)) => {
-            commands
-                .entity(food_entity)
-                .despawn_recursive();
+            commands.entity(food_entity).despawn();
             tile_storage.remove(tile_pos);
             commands.trigger(NewFoodEvent);
-            commands.spawn(AudioBundle {
-                source: sounds.apple.clone(),
-                ..default()
-            });
         }
         None => {
-            let old_tail =
-                snake.segments.pop_back().unwrap();
-            commands.entity(old_tail).despawn_recursive();
+            let old_tail = snake
+                .segments
+                .pop_back()
+                .ok_or("expect a snake to have a tail")?;
+            commands.entity(old_tail).despawn();
             let old_tail_tile_pos =
-                positions.get(old_tail).unwrap();
+                positions.get(old_tail)?;
             tile_storage.remove(old_tail_tile_pos);
         }
     }
+    Ok(())
 }
 
 pub fn reset_game(
@@ -162,22 +138,16 @@ pub fn reset_game(
         ),
     >,
     mut last_pressed: ResMut<controls::Direction>,
-    mut tile_storage: Query<
+    tile_storage: Single<
         (&TilemapSize, &mut TileStorage),
         With<SnakeLayer>,
     >,
 ) {
-    let Ok((tilemap_size, mut tile_storage)) =
-        tile_storage.get_single_mut()
-    else {
-        error!(
-            "expected a tilemap with TileStorage to exist"
-        );
-        return;
-    };
+    let (tilemap_size, mut tile_storage) =
+        tile_storage.into_inner();
 
     for entity in &positions {
-        commands.entity(entity).despawn_recursive();
+        commands.entity(entity).despawn();
     }
 
     commands.trigger({
@@ -197,34 +167,26 @@ pub fn reset_game(
     *tile_storage = TileStorage::empty(*tilemap_size);
 }
 
-pub fn spawn_menu(
-    mut commands: Commands,
-    fonts: Res<FontAssets>,
-) {
-    commands
-        .spawn((
-            ButtonBundle {
-                style: Style {
-                    width: Val::Percent(100.0),
-                    height: Val::Px(65.0),
-                    justify_content: JustifyContent::Center,
-                    align_items: AlignItems::Center,
-                    ..default()
-                },
+pub fn spawn_menu(mut commands: Commands) {
+    commands.spawn((
+        Button,
+        Node {
+            width: Val::Percent(100.0),
+            height: Val::Px(65.0),
+            justify_content: JustifyContent::Center,
+            align_items: AlignItems::Center,
+            ..default()
+        },
+        StateScoped(GameState::Menu),
+        children![(
+            Text::new("New Game"),
+            TextFont {
+                font_size: 30.0,
                 ..default()
             },
-            StateScoped(GameState::Menu),
-        ))
-        .with_children(|parent| {
-            parent.spawn(TextBundle::from_section(
-                "New Game",
-                TextStyle {
-                    font: fonts.outfit.clone(),
-                    font_size: 40.0,
-                    color: Color::srgb(0.1, 0.1, 0.1),
-                },
-            ));
-        });
+            TextColor(Color::from(SLATE_950))
+        )],
+    ));
 }
 
 const NORMAL_BUTTON: Color = Color::srgb(0.95, 0.95, 0.95);

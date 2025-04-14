@@ -12,10 +12,10 @@ pub struct SnakeLayer;
 pub fn spawn_board(
     mut commands: Commands,
     images: Res<ImageAssets>,
-) {
+) -> Result {
     let mut rng = rand::thread_rng();
     let weights = vec![3, 3, 1];
-    let dist = WeightedIndex::new(weights).unwrap();
+    let dist = WeightedIndex::new(weights)?;
 
     let map_size = TilemapSize { x: 20, y: 20 };
 
@@ -32,7 +32,7 @@ pub fn spawn_board(
                     texture_index: TileTextureIndex(
                         dist.sample(&mut rng) as u32,
                     ),
-                    ..Default::default()
+                    ..default()
                 })
                 .id();
             tile_storage.set(&tile_pos, tile_entity);
@@ -52,10 +52,8 @@ pub fn spawn_board(
             images.grass.clone(),
         ),
         tile_size,
-        transform: get_tilemap_center_transform(
-            &map_size, &grid_size, &map_type, 0.0,
-        ),
-        ..Default::default()
+        anchor: TilemapAnchor::Center,
+        ..default()
     });
 
     // snake layer
@@ -75,11 +73,11 @@ pub fn spawn_board(
                 images.snake.clone(),
             ),
             tile_size,
-            transform: get_tilemap_center_transform(
-                &map_size, &grid_size, &map_type, 1.0,
-            ),
-            ..Default::default()
+            anchor: TilemapAnchor::Center,
+            ..default()
         },
         SnakeLayer,
     ));
+
+    Ok(())
 }

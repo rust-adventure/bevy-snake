@@ -1,7 +1,6 @@
 use crate::GameState;
-use bevy::prelude::{
-    in_state, App, ButtonInput, IntoSystemConfigs, KeyCode,
-    Plugin, Res, ResMut, Resource, Update,
+use bevy::{
+    ecs::schedule::IntoScheduleConfigs, prelude::*,
 };
 
 pub struct ControlsPlugin;
@@ -23,19 +22,18 @@ pub enum Direction {
     #[default]
     Right,
 }
-use Direction::*;
 
 fn user_input(
     input: Res<ButtonInput<KeyCode>>,
     mut last_pressed: ResMut<Direction>,
 ) {
     if input.pressed(KeyCode::ArrowUp) {
-        *last_pressed = Up;
+        *last_pressed = Direction::Up;
     } else if input.pressed(KeyCode::ArrowDown) {
-        *last_pressed = Down;
+        *last_pressed = Direction::Down;
     } else if input.pressed(KeyCode::ArrowLeft) {
-        *last_pressed = Left;
+        *last_pressed = Direction::Left;
     } else if input.pressed(KeyCode::ArrowRight) {
-        *last_pressed = Right;
+        *last_pressed = Direction::Right;
     }
 }

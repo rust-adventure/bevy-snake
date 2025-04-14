@@ -1,14 +1,6 @@
 use std::collections::VecDeque;
 
-use bevy::{
-    app::{Plugin, Update},
-    prelude::{
-        default, Commands, Component, Entity, Event,
-        IntoSystemConfigs, Query, Res, ResMut, Resource,
-        Trigger, With,
-    },
-    state::condition::in_state,
-};
+use bevy::prelude::*;
 use bevy_ecs_tilemap::{
     map::TilemapId,
     tiles::{
@@ -18,7 +10,7 @@ use bevy_ecs_tilemap::{
 };
 use itertools::Itertools;
 
-use crate::{board::SnakeLayer, tick, GameState};
+use crate::{GameState, board::SnakeLayer, tick};
 
 mod position;
 use position::*;
@@ -36,7 +28,7 @@ impl Plugin for SnakePlugin {
                     .after(tick)
                     .run_if(in_state(GameState::Playing)),
             )
-            .observe(spawn_snake_segment);
+            .add_observer(spawn_snake_segment);
     }
 }
 
@@ -193,14 +185,14 @@ fn spawn_snake_segment(
     trigger: Trigger<SpawnSnakeSegmentEvent>,
     mut commands: Commands,
     mut snake: ResMut<Snake>,
-    mut tilemap: Query<
+    tilemap: Single<
         (Entity, &mut TileStorage),
         With<SnakeLayer>,
     >,
     snake_texture_index: Res<SnakeHeadTextureIndex>,
 ) {
     let (tilemap_entity, mut tile_storage) =
-        tilemap.single_mut();
+        tilemap.into_inner();
 
     let tile_pos = trigger.event().position;
 

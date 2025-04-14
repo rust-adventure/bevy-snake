@@ -1,16 +1,17 @@
 [package]
 name = "snake"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = "0.14"
-itertools = "0.13"
+bevy = "=0.16.0-rc.3"
+itertools = "0.14"
 rand = "0.8.5"
-bevy_asset_loader = { version = "0.21", features = ["2d"] }
-bevy_ecs_tilemap = { git = "https://github.com/StarArawn/bevy_ecs_tilemap.git", rev = "aee4779" }
+# bevy_asset_loader = { version = "0.21", features = ["2d"] }
+bevy_asset_loader = { version = "0.23.0-rc.1", features = ["2d"] }
+bevy_ecs_tilemap = "0.16.0-rc.1"
 
 [features]
 default = ["bevy_ecs_tilemap/atlas"]

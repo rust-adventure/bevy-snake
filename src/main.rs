@@ -6,10 +6,10 @@ use bevy::{
 };
 use bevy_ecs_tilemap::TilemapPlugin;
 use snake::{
-    assets::AssetsPlugin, board::spawn_board,
+    GameState, assets::AssetsPlugin, board::spawn_board,
     button_system, controls::ControlsPlugin,
     food::FoodPlugin, reset_game, snake::SnakePlugin,
-    spawn_menu, tick, GameState,
+    spawn_menu, tick,
 };
 
 fn main() {
@@ -70,16 +70,14 @@ fn transition_to_start_menu(
 }
 
 fn setup(mut commands: Commands) {
-    commands.spawn(Camera2dBundle {
-        projection: OrthographicProjection {
+    commands.spawn((
+        Camera2d,
+        Projection::Orthographic(OrthographicProjection {
             scaling_mode: ScalingMode::AutoMin {
                 min_width: (20. + 4.) * 136.,
                 min_height: (20. + 4.) * 136.,
             },
-            far: 1000.,
-            near: -1000.,
-            ..default()
-        },
-        ..default()
-    });
+            ..OrthographicProjection::default_2d()
+        }),
+    ));
 }

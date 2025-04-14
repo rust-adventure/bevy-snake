@@ -7,8 +7,8 @@ pub enum RelativePosition {
     East,
     West,
 }
-use bevy_ecs_tilemap::tiles::TileFlip;
 use RelativePosition::*;
+use bevy_ecs_tilemap::tiles::TileFlip;
 
 impl From<RelativePosition> for TileFlip {
     fn from(value: RelativePosition) -> Self {

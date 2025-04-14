@@ -5,26 +5,8 @@ pub struct AssetsPlugin;
 
 impl Plugin for AssetsPlugin {
     fn build(&self, app: &mut App) {
-        app.init_collection::<ImageAssets>()
-            .init_collection::<AudioAssets>()
-            .init_collection::<FontAssets>();
+        app.init_collection::<ImageAssets>();
     }
-}
-
-#[derive(AssetCollection, Resource)]
-pub struct FontAssets {
-    #[asset(path = "Outfit-Black.ttf")]
-    pub outfit: Handle<Font>,
-}
-
-#[derive(AssetCollection, Resource)]
-pub struct AudioAssets {
-    #[asset(path = "gameover.ogg")]
-    pub gameover: Handle<AudioSource>,
-    #[asset(path = "apple.ogg")]
-    pub apple: Handle<AudioSource>,
-    #[asset(path = "menu_click.ogg")]
-    pub menu_click: Handle<AudioSource>,
 }
 
 #[derive(AssetCollection, Resource)]
