@@ -7,7 +7,7 @@ use board::SnakeLayer;
 use controls::Direction::*;
 use food::{Food, NewFoodEvent};
 use itertools::Itertools;
-use snake::{Snake, SnakeSegment, SpawnSnakeSegmentEvent};
+use snake::{SegmentOf, Snake, SpawnSnakeSegmentEvent};
 
 pub mod assets;
 pub mod board;
@@ -34,15 +34,15 @@ enum GameOverReason {
 
 pub fn tick(
     mut commands: Commands,
-    mut snake: ResMut<Snake>,
+    snake: Single<&Snake>,
     positions: Query<
         &TilePos,
-        (Without<Food>, With<SnakeSegment>),
+        (Without<Food>, With<SegmentOf>),
     >,
     input: Res<controls::Direction>,
     query_food: Query<
         (Entity, &TilePos),
-        (With<Food>, Without<SnakeSegment>),
+        (With<Food>, Without<SegmentOf>),
     >,
     mut next_state: ResMut<NextState<GameState>>,
     tilemap: Single<
@@ -53,8 +53,10 @@ pub fn tick(
     let (tilemap_size, mut tile_storage) =
         tilemap.into_inner();
 
-    let next_position = positions.get(snake.segments[0])
-        .map_err(|err| format!("stored entities in a snake must have `Position` components associated with them, {err}"))?;
+    let next_position =
+        positions.get(snake.iter().last().ok_or(
+            "snake should have at least one segment",
+        )?)?;
 
     let mut next_position = IVec2::new(
         next_position.x as i32,
@@ -85,7 +87,7 @@ pub fn tick(
         .find(|pos| pos == &&next_position)
         .map(|_| GameOverReason::HitSnake);
 
-    let has_won = (snake.segments.len()
+    let has_won = (snake.iter().count()
         == (tilemap_size.x * tilemap_size.y) as usize)
         .then_some(GameOverReason::Win);
 
@@ -115,8 +117,8 @@ pub fn tick(
         }
         None => {
             let old_tail = snake
-                .segments
-                .pop_back()
+                .iter()
+                .next()
                 .ok_or("expect a snake to have a tail")?;
             commands.entity(old_tail).despawn();
             let old_tail_tile_pos =
@@ -129,14 +131,8 @@ pub fn tick(
 
 pub fn reset_game(
     mut commands: Commands,
-    mut snake: ResMut<Snake>,
-    positions: Query<
-        Entity,
-        (
-            With<TilePos>,
-            Or<(With<SnakeSegment>, With<Food>)>,
-        ),
-    >,
+    snake: Option<Single<Entity, With<Snake>>>,
+    food: Query<Entity, (With<TilePos>, With<Food>)>,
     mut last_pressed: ResMut<controls::Direction>,
     tile_storage: Single<
         (&TilemapSize, &mut TileStorage),
@@ -146,10 +142,14 @@ pub fn reset_game(
     let (tilemap_size, mut tile_storage) =
         tile_storage.into_inner();
 
-    for entity in &positions {
+    for entity in &food {
         commands.entity(entity).despawn();
     }
 
+    if let Some(snake) = snake {
+        commands.entity(*snake).despawn();
+    }
+    commands.spawn(Snake::default());
     commands.trigger({
         SpawnSnakeSegmentEvent {
             position: TilePos::new(3, 4),
@@ -162,7 +162,6 @@ pub fn reset_game(
     });
 
     commands.trigger(NewFoodEvent);
-    *snake = default();
     *last_pressed = default();
     *tile_storage = TileStorage::empty(*tilemap_size);
 }

@@ -8,7 +8,7 @@ use bevy_ecs_tilemap::{
 use itertools::Itertools;
 use rand::prelude::SliceRandom;
 
-use crate::{board::SnakeLayer, snake::SnakeSegment};
+use crate::{board::SnakeLayer, snake::SegmentOf};
 
 pub struct FoodPlugin;
 
@@ -31,7 +31,7 @@ pub fn new_food_event_triggers(
     mut commands: Commands,
     positions: Query<
         &TilePos,
-        Or<(With<SnakeSegment>, With<Food>)>,
+        Or<(With<SegmentOf>, With<Food>)>,
     >,
 
     map: Single<&TilemapSize, With<SnakeLayer>>,

@@ -1,5 +1,3 @@
-use std::collections::VecDeque;
-
 use bevy::prelude::*;
 use bevy_ecs_tilemap::{
     map::TilemapId,
@@ -21,7 +19,6 @@ impl Plugin for SnakePlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_event::<SpawnSnakeSegmentEvent>()
             .insert_resource(SnakeHeadTextureIndex(8))
-            .init_resource::<Snake>()
             .add_systems(
                 Update,
                 render_snake_segments
@@ -36,11 +33,14 @@ impl Plugin for SnakePlugin {
 struct SnakeHeadTextureIndex(u32);
 
 #[derive(Component, Debug)]
-pub struct SnakeSegment;
+#[relationship(relationship_target = Snake)]
+pub struct SegmentOf(Entity);
 
-#[derive(Debug, Default, Resource)]
+#[derive(Component, Debug, Default)]
+#[relationship_target(relationship = SegmentOf, linked_spawn)]
 pub struct Snake {
-    pub segments: VecDeque<Entity>,
+    #[relationship]
+    segments: Vec<Entity>,
 }
 
 fn detect_side(
@@ -61,14 +61,14 @@ fn detect_side(
 }
 
 fn render_snake_segments(
-    snake: Res<Snake>,
+    snake: Single<&Snake>,
     mut positions: Query<
         (
             &TilePos,
             &mut TileTextureIndex,
             &mut TileFlip,
         ),
-        With<SnakeSegment>,
+        With<SegmentOf>,
     >,
     snake_texture_index: Res<SnakeHeadTextureIndex>,
 ) -> Result {
@@ -76,25 +76,25 @@ fn render_snake_segments(
 
     // head
     if let Some((first, second)) =
-        snake.segments.iter().tuple_windows().next()
+        snake.iter().rev().tuple_windows().next()
     {
-        let pos = positions.get(*first)?.0;
-        let pos_second = positions.get(*second)?.0;
+        let pos = positions.get(first)?.0;
+        let pos_second = positions.get(second)?.0;
         let flip =
             TileFlip::from(detect_side(pos, pos_second));
         let (_, mut sprite, mut tile_flip) =
-            positions.get_mut(*first)?;
+            positions.get_mut(first)?;
         sprite.0 = snake_texture_index.0;
         *tile_flip = flip;
     }
 
     // tail
     if let Some((second_to_last, last)) =
-        snake.segments.iter().tuple_windows().last()
+        snake.iter().rev().tuple_windows().last()
     {
-        let pos = positions.get(*last)?.0;
+        let pos = positions.get(last)?.0;
         let second_to_last_pos =
-            positions.get(*second_to_last)?.0;
+            positions.get(second_to_last)?.0;
 
         let flip = TileFlip::from(detect_side(
             pos,
@@ -102,17 +102,17 @@ fn render_snake_segments(
         ));
 
         let (_, mut sprite, mut tile_flip) =
-            positions.get_mut(*last)?;
+            positions.get_mut(last)?;
         sprite.0 = snake_texture_index.0 + 3;
         *tile_flip = flip
     }
 
     for (front, origin, back) in
-        snake.segments.iter().tuple_windows()
+        snake.iter().rev().tuple_windows()
     {
-        let front_pos = positions.get(*front)?.0;
-        let origin_pos = positions.get(*origin)?.0;
-        let back_pos = positions.get(*back)?.0;
+        let front_pos = positions.get(front)?.0;
+        let origin_pos = positions.get(origin)?.0;
+        let back_pos = positions.get(back)?.0;
 
         let image = match (
             detect_side(origin_pos, front_pos),
@@ -170,7 +170,7 @@ fn render_snake_segments(
         };
 
         let (_, mut sprite, mut tile_flip) =
-            positions.get_mut(*origin)?;
+            positions.get_mut(origin)?;
         sprite.0 = image.0;
         *tile_flip = image.1;
     }
@@ -186,7 +186,7 @@ pub struct SpawnSnakeSegmentEvent {
 fn spawn_snake_segment(
     trigger: Trigger<SpawnSnakeSegmentEvent>,
     mut commands: Commands,
-    mut snake: ResMut<Snake>,
+    snake: Single<Entity, With<Snake>>,
     tilemap: Single<
         (Entity, &mut TileStorage),
         With<SnakeLayer>,
@@ -208,10 +208,8 @@ fn spawn_snake_segment(
                 ),
                 ..default()
             },
-            SnakeSegment,
+            SegmentOf(*snake),
         ))
         .id();
     tile_storage.set(&tile_pos, tile_entity);
-
-    snake.segments.push_front(tile_entity);
 }
