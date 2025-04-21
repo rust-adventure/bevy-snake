@@ -6,12 +6,12 @@ edition = "2024"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = "=0.16.0-rc.3"
+bevy = "0.16.0-rc.5"
 itertools = "0.14"
 rand = "0.8.5"
 # bevy_asset_loader = { version = "0.21", features = ["2d"] }
-bevy_asset_loader = { version = "0.23.0-rc.1", features = ["2d"] }
-bevy_ecs_tilemap = "0.16.0-rc.1"
+bevy_asset_loader = { version = "0.23.0-rc.2", features = ["2d"] }
+bevy_ecs_tilemap = "0.16.0-rc.2"
 
 [features]
 default = ["bevy_ecs_tilemap/atlas"]

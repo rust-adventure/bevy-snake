@@ -162,8 +162,8 @@ pub fn reset_game(
     });
 
     commands.trigger(NewFoodEvent);
-    *snake = Default::default();
-    *last_pressed = Default::default();
+    *snake = default();
+    *last_pressed = default();
     *tile_storage = TileStorage::empty(*tilemap_size);
 }
 
@@ -189,10 +189,6 @@ pub fn spawn_menu(mut commands: Commands) {
     ));
 }
 
-const NORMAL_BUTTON: Color = Color::srgb(0.95, 0.95, 0.95);
-const HOVERED_BUTTON: Color = Color::srgb(0.85, 0.85, 0.85);
-const PRESSED_BUTTON: Color = Color::srgb(0.75, 0.75, 0.75);
-
 pub fn button_system(
     mut interaction_query: Query<
         (&Interaction, &mut BackgroundColor),
@@ -203,14 +199,20 @@ pub fn button_system(
     for (interaction, mut color) in &mut interaction_query {
         match *interaction {
             Interaction::Pressed => {
-                *color = PRESSED_BUTTON.into();
+                *color = BackgroundColor(
+                    Color::WHITE.with_alpha(0.75),
+                );
                 next_state.set(GameState::Playing);
             }
             Interaction::Hovered => {
-                *color = HOVERED_BUTTON.into();
+                *color = BackgroundColor(
+                    Color::WHITE.with_alpha(0.85),
+                );
             }
             Interaction::None => {
-                *color = NORMAL_BUTTON.into();
+                *color = BackgroundColor(
+                    Color::WHITE.with_alpha(0.95),
+                );
             }
         }
     }

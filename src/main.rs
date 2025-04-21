@@ -1,7 +1,8 @@
 use std::time::Duration;
 
 use bevy::{
-    prelude::*, render::camera::ScalingMode,
+    color::palettes::tailwind::*, prelude::*,
+    render::camera::ScalingMode,
     time::common_conditions::on_timer,
 };
 use bevy_ecs_tilemap::TilemapPlugin;
@@ -14,9 +15,7 @@ use snake::{
 
 fn main() {
     App::new()
-        .insert_resource(ClearColor(Color::srgb(
-            0.52, 0.73, 0.17,
-        )))
+        .insert_resource(ClearColor(Color::from(LIME_800)))
         .add_plugins((
             DefaultPlugins.set(WindowPlugin {
                 primary_window: Some(Window {

@@ -83,7 +83,7 @@ fn spawn_apple_event_triggers(
                 position: tile_pos,
                 tilemap_id: TilemapId(tilemap_entity),
                 texture_index: TileTextureIndex(116),
-                ..Default::default()
+                ..default()
             },
             Food,
         ))
