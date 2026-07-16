@@ -1,0 +1,16 @@
+[package]
+name = "snake"
+version = "0.1.0"
+edition = "2024"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+bevy = "0.19"
+itertools = "0.15"
+bevy_rand = { version = "0.15", features = ["wyrand"] }
+rand = "0.10"
+
+[lints.clippy]
+type_complexity = "allow"
+too_many_arguments = "allow"
